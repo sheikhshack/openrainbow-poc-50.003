@@ -13,6 +13,7 @@ let nodeSDK = null;
 nodeSDK = new NodeSDK(bot);
 nodeSDK.start().then( () => {
     // Start the bot
+
      chatbot = new ChatBot(nodeSDK, scenario);
     return chatbot.start();
 }).then( () => {
