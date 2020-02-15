@@ -1,0 +1,16 @@
+{
+  "name": "rainbowtesting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "rainbow-chatbot": "^1.40.0",
+    "rainbow-node-sdk": "^1.66.1"
+  }
+}

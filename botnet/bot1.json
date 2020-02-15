@@ -1,0 +1,40 @@
+{
+  "rainbow": {
+    "host": "sandbox.openrainbow.com",
+    "mode": "xmpp"
+  },
+  "credentials": {
+    "login": "bot1@swaggy.com",
+    "password": "@Bot1password"
+  },
+  "application": {
+    "appID": "739926004b6811ea819a43cb4a9dae9b",
+    "appSecret": "UzgC0pNtO3o1tVOZ4DN3Lbd11k51O1wMx2iif0Fwd7qDoBP5FBAzCb3wG5NKLmKq"
+  },
+  "logs": {
+    "enableConsoleLogs": true,
+    "enableFileLogs": false,
+    "color": true,
+    "level": "debug",
+    "customLabel": "<your login>>",
+    "system-dev": {
+      "internals": true,
+      "http": true
+    },
+    "file": {
+      "path": "/var/tmp/chatbot/",
+      "customFileName": "R-SDK-Node-ChatBot",
+      "level": "debug",
+      "zippedArchive" : false
+    }
+  },
+  "im": {
+    "sendReadReceipt": false,
+    "messageMaxLength": 1024,
+    "sendMessageToConnectedUser": true,
+    "conversationsRetrievedFormat": "small",
+    "storeMessages": false,
+    "nbMaxConversations": 15,
+    "rateLimitPerHour": 1000
+  }
+}

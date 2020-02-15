@@ -1,0 +1,22 @@
+{
+  "test": {
+    "aMessage": {
+      "type": "message",
+      "value": "Welcome. The purpose of this bot is to show u this msg lmao. You should be greeted with a choice in 2s",
+      "waiting": 2000,
+      "next": "aQuestion"
+    },
+    "aQuestion": {
+      "type": "question",
+      "value": "Now I will test a response message from you. Just say something",
+      "waiting": 1000,
+      "next": "aLastMessage"
+
+    },
+    "aLastMessage": {
+      "type": "message",
+      "value": "All systems go! Bye!"
+
+    }
+  }
+}
