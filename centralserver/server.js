@@ -13,7 +13,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
     // define basic app params
     app.listen(3000, () =>
-        app.get('/', async (req, res) => {
+        app.get('/createguest', async (req, res) => {
             let loginCreds = await rainbowMotherload.createGuests(10800);
             return res.send({
                 guestID : loginCreds.loginID,
