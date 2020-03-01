@@ -20,20 +20,11 @@ async function createGuests(talkTime) {
         // I simplified the process with async-await because i lazy type
         let result = await rainbowSDK.admin.createAnonymousGuestUser(talkTime);
 
-        // emulates sending of first text
-        // await rainbowSDK.im.sendMessageToJid("Hey there. I am CSA Sheikh here", result.jid);
-        // due to shit APIS, forced to create bubble instead
-        // rainbowSDK.bubbles.createBubble("Test", "A testing mechanism", false).then(function(bubble) {
-        //     rainbowSDK.bubbles.inviteContactToBubble(result, bubble, false, false, "non");
-        //
-        // }).catch((err) =>
-        // {
-        //
-        // });
 
         return {
             "loginID" : result.loginEmail,
-            "loginPass" : result.password
+            "loginPass" : result.password,
+
         }
 
 
@@ -53,6 +44,25 @@ async function createGuests(talkTime) {
 
 
 }
+
+async function createGuestWithTokenization(){
+    // this creates tokens for login instead. Front end can easily login with token
+    let result = await rainbowSDK.admin.createAnonymousGuestUser(3600);
+    let token = await rainbowSDK.admin.askTokenOnBehalf(result.loginEmail, result.password);
+    console.log(token);
+    return token.token;
+}
+
+async function createGuestWithName(name, ticketID){
+    let result = await rainbowSDK.admin.createGuestUser(name, ticketID, "en-US", 3600);
+    return {
+        "loginID" : result.loginEmail,
+        "loginPass" : result.password,
+
+    }
+}
+
+
 
 async function queryAgentStatus(agentEmail) {
        //let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
@@ -82,6 +92,8 @@ module.exports = {
     init: init,
     queryAgentStatus:queryAgentStatus,
     createGuests:createGuests,
+    createGuestWithName:createGuestWithName,
+    createGuestWithTokenization: createGuestWithTokenization,
     overlord:rainbowSDK
 };
 

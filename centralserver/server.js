@@ -24,6 +24,29 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
     );
 
+    app.listen(3001, () =>
+        app.get('/createguestdynamic', async (req, res) => {
+            let nameIntended = req.query.name;
+            let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #00001");
+            return res.send({
+                guestID : loginCreds.loginID,
+                guestPass: loginCreds.loginPass
+
+            });
+        })
+
+    );
+    app.listen(3002, () =>
+        app.get('/createguestwithtoken', async (req, res) => {
+
+            let token = await rainbowMotherload.createGuestWithTokenization();
+            return res.send({
+                token : token
+            });
+        })
+
+    );
+
 
 
     // client first requests for access via guest login
