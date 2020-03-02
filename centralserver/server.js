@@ -47,6 +47,17 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
     );
 
+    app.listen(3003, () =>
+        app.get('/queryAdminContacts', async(req, res) => {
+            let email = req.query.email;
+            let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
+            return res.send({
+                listOfContacts
+            });
+
+        })
+    );
+
 
 
     // client first requests for access via guest login

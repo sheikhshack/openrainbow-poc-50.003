@@ -66,8 +66,9 @@ async function createGuestWithName(name, ticketID){
 
 async function queryAgentStatus(agentEmail) {
        //let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
-       let data2 = await rainbowSDK.contacts.getRosters();
-       return data2
+       let data2 = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
+       console.log(data2);
+       return data2;
 
         // rainbowSDK.contacts.getContactByLoginEmail(agentEmail).then((queriedUser) => {
         //     if (queriedUser) {
