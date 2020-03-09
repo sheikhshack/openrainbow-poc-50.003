@@ -53,6 +53,7 @@ async function createGuestWithTokenization(){
     return token.token;
 }
 
+
 async function createGuestWithName(name, ticketID){
     let result = await rainbowSDK.admin.createGuestUser(name, ticketID, "en-US", 3600);
     return {
@@ -63,12 +64,25 @@ async function createGuestWithName(name, ticketID){
 }
 
 
+async function checkOnlineStatus(id){
+    // uses the presence api
+    let result = await rainbowSDK.contacts.getContactByJid(id);
+    console.log(result);
+    if (result.presence === "online"){
+        return true;
+    }
+    return false;
+
+
+}
+
+
 
 async function queryAgentStatus(agentEmail) {
-       //let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
-       let data2 = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
-       console.log(data2);
-       return data2;
+       let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
+       // let data2 = await rainbowSDK.presence.getUserConnectedPresence()
+       //console.log(data);
+       return data;
 
         // rainbowSDK.contacts.getContactByLoginEmail(agentEmail).then((queriedUser) => {
         //     if (queriedUser) {
@@ -95,6 +109,7 @@ module.exports = {
     createGuests:createGuests,
     createGuestWithName:createGuestWithName,
     createGuestWithTokenization: createGuestWithTokenization,
+    checkOnlineStatus: checkOnlineStatus,
     overlord:rainbowSDK
 };
 

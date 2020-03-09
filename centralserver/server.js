@@ -7,6 +7,9 @@ const clientSDK = require('rainbow-node-sdk');
 const clientProperties = require('./clientCredentials');
 const cors = require('cors');
 const app = express();
+// Initialises cors policy for app
+app.use(cors());
+app.use(express.json());
 
 // does a check to see if motherload SDK is ready, proceeds to handle app requests
 rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
@@ -51,10 +54,23 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
         app.get('/queryAdminContacts', async(req, res) => {
             let email = req.query.email;
             let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
+            let status = await rainbowMotherload.checkOnlineStatus(listOfContacts.jid);
+            console.log(status);
             return res.send({
                 listOfContacts
             });
 
+        })
+    );
+
+    app.listen(3004, () =>
+        app.post('/getRequiredCSA', async(req, res) => {
+            console.log("Method 1");
+            console.log(req.body.name);
+            console.log("Method 2");
+            // console.log(req.data.name);
+            return res.send({
+                result: '4c33fa55637949768b4d2dbc417c69da@sandbox-all-in-one-rbx-prod-1.rainbow.sbg'});
         })
     );
 
