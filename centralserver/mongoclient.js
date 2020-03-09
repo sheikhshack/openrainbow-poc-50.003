@@ -50,6 +50,10 @@ const updateavail = function(db, callback) {
                   collection.updateOne() ;
 };
 
+module.exports = {
+    checkAvail: checkAvail,
+
+};
 
 
 

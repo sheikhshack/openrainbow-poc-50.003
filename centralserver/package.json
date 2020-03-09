@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "dependencies": {
     "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "mongodb": "^3.5.4",
     "rainbow-node-sdk": "^1.68.0"
   },
   "devDependencies": {
