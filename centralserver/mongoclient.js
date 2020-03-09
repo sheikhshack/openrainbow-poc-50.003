@@ -13,31 +13,33 @@ const dbName = "sutdproject";
 const client = new MongoClient(url,  {useUnifiedTopology: true});
 
 // Use connect method to connect to the Server
-client.connect(function(err, client) {
+client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
-                    checkAvail(db, function() {
-                                  })
-               
-               
-                    
+                    checkAvail("Graduate Office","Chat")
 });
 
+
+// console log works to push json
+// return function cant be called in the connect block :Pending Promise
 async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
-                  const collection = client.db(dbName).collection('Agent');
+                  const collection = await client.db(dbName).collection('Agent');
                   // Perform the find function
-                  await collection.find({
-                    'availability': true,
-                     'Department_id': departmentID,
-                      'typeofComm' : communication
+                  collection.find({
+                     'availability': true,
+                     'Department_id' : departmentID,
+                     'typeOfComm' : communication
+                     
                   }).toArray(function(err, docs) {
                   console.log("Found the following records");
-                  console.log(docs);
-                  return docs;
+                  console.log(JSON.stringify(docs));
+                  return JSON.stringify(docs);
              });
 }
+
+
 
 
 const updateavail = function(db, callback) {
@@ -47,11 +49,10 @@ const updateavail = function(db, callback) {
                   collection.updateOne() ;
 };
 
+
+
+
 module.exports = {
     checkAvail: checkAvail,
 
 };
-
-
-
-
