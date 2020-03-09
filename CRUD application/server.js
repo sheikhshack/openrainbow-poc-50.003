@@ -11,15 +11,15 @@ const assert = require('assert');
 // Connection URL
 const url = 'mongodb://localhost';
 
+
 // Use connect method to connect to the Server
 MongoClient.connect(url,  {useUnifiedTopology: true }, function(err, client) {
                     assert.equal(null, err);
                     const db = client.db("sutdproject");
                     
-                    var cursor = db.collection('Department').find({
-                                                                  agentList: {"availability" : true}
-                                                                  
-                                                                  });
+                    const cursor = db.collection('Department').find({
+                      'agentList':{ $elemMatch:{availability : true}}
+                    });
 
                     function iterateFunc(doc) {
                        console.log(JSON.stringify(doc, null, 4));
@@ -33,6 +33,8 @@ MongoClient.connect(url,  {useUnifiedTopology: true }, function(err, client) {
                     
                     
 });
+
+
 
 
 
