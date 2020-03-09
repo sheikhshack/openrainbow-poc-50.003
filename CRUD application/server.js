@@ -49,7 +49,7 @@ const updateavail = function(db, callback) {
                   // Get the documents collection
                   const collection = db.collection('Agents');
                   // Update document where a is 2, set b equal to 1
-                  collection.insert
+                  collection.updateOne() 
 }
 
 
