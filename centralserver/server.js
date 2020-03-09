@@ -2,6 +2,7 @@
 // this script attempts to emulate the behavior of a webApp. Once WebApp is ready we can deploy the same flow :)
 
 let rainbowMotherload = require('./rainbowShake');
+let swaggyDatabase = require(./mongoclient);
 var express = require('express');
 const clientSDK = require('rainbow-node-sdk');
 const clientProperties = require('./clientCredentials');

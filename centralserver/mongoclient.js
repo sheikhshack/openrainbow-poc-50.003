@@ -1,9 +1,7 @@
 // Setup Express web application
-const express = require("express");
 const bodyParser = require("body-parser");
 
 const app = express();
-var mongoose = require("mongoose");
 
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
