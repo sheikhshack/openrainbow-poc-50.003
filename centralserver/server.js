@@ -5,7 +5,7 @@ let rainbowMotherload = require('./rainbowShake');
 var express = require('express');
 const clientSDK = require('rainbow-node-sdk');
 const clientProperties = require('./clientCredentials');
-
+const cors = require('cors');
 const app = express();
 
 // does a check to see if motherload SDK is ready, proceeds to handle app requests
@@ -45,6 +45,17 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             });
         })
 
+    );
+
+    app.listen(3003, () =>
+        app.get('/queryAdminContacts', async(req, res) => {
+            let email = req.query.email;
+            let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
+            return res.send({
+                listOfContacts
+            });
+
+        })
     );
 
 

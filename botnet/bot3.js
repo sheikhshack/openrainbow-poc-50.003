@@ -2,10 +2,10 @@ const ChatBot = require("rainbow-chatbot");
 const NodeSDK = require("rainbow-node-sdk");
 
 // Load the bot identity
-const bot = require("./bot1.json");
+const bot = require("./bot3.json");
 
 // Load the scenario
-const scenario = require("./scenario1.json");
+const scenario = require("./scenario3.json");
 let chatbot = null;
 let nodeSDK = null;
 

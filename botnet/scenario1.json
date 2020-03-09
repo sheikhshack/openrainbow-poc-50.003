@@ -2,7 +2,7 @@
   "test": {
     "aMessage": {
       "type": "message",
-      "value": "Welcome. The purpose of this bot is to show u this msg lmao. You should be greeted with a choice in 2s",
+      "value": "Welcome. Your are currently conversing with Bot 1. You should be greeted with a choice in 2s",
       "waiting": 2000,
       "next": "aQuestion"
     },

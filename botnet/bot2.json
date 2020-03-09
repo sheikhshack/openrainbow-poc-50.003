@@ -4,12 +4,12 @@
     "mode": "xmpp"
   },
   "credentials": {
-    "login": "bot1@swaggy.com",
-    "password": "@Bot1password"
+    "login": "bot2@swaggy.com",
+    "password": "@Bot2password"
   },
   "application": {
-    "appID": "450224e05c5711eabf7e77d14e87b936",
-    "appSecret": "Lams0dln3rrHnyPslFVewDX7rbvVYDR00THIg5Xlkn9hxMStWTs0jT8ARrjJ3NeD"
+    "appID": "3b98a0f05c5711eabf7e77d14e87b936",
+    "appSecret": "A0FokXQbzNotOy2L1flTUi9hA2JByZWAcAMjFfWBLREMc0Igp8whTLuRgbnorutV"
   },
   "logs": {
     "enableConsoleLogs": true,
