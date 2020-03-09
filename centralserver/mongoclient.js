@@ -1,8 +1,6 @@
 // Setup Express web application
 const bodyParser = require("body-parser");
 
-const app = express();
-
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 
@@ -26,17 +24,18 @@ client.connect(function(err, client) {
                     
 });
 
-function checkAvail(db, callback) {
+async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
-                  const collection = db.collection('Agent');
+                  const collection = client.db(dbName).collection('Agent');
                   // Perform the find function
-                  collection.find({
-                    'availability': true
+                  await collection.find({
+                    'availability': true,
+                     'Department_id': departmentID,
+                      'typeofComm' : communication
                   }).toArray(function(err, docs) {
-                  assert.equal(err, null);
                   console.log("Found the following records");
                   console.log(docs);
-                  return callback(docs);
+                  return docs;
              });
 }
 

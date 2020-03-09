@@ -2,7 +2,7 @@
 // this script attempts to emulate the behavior of a webApp. Once WebApp is ready we can deploy the same flow :)
 
 let rainbowMotherload = require('./rainbowShake');
-let swaggyDatabase = require(./mongoclient);
+let swaggyDatabase = require('./mongoclient');
 var express = require('express');
 const clientSDK = require('rainbow-node-sdk');
 const clientProperties = require('./clientCredentials');
@@ -66,12 +66,16 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
     app.listen(3004, () =>
         app.post('/getRequiredCSA', async(req, res) => {
-            console.log("Method 1");
-            console.log(req.body.name);
-            console.log("Method 2");
+            let department = req.body.department;
+            let communication = req.body.communication;
+            let problem = req.body.problem;
+            // proceeds to query DB for matching CSA
+            let data = await swaggyDatabase.checkAvail(department, communication);
+
+
             // console.log(req.data.name);
             return res.send({
-                result: '4c33fa55637949768b4d2dbc417c69da@sandbox-all-in-one-rbx-prod-1.rainbow.sbg'});
+                result: data.jid});
         })
     );
 
