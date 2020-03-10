@@ -25,7 +25,6 @@ client.connect( function(err, client) {
 // return function cant be called in the connect block :Pending Promise
 async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
-                  const collection = await client.db(dbName).collection('Agent');
                   let result = await client.db(dbName).collection('Agent').find({
                       'availability': true,
                       'Department_id' : departmentID,
@@ -33,23 +32,8 @@ async function checkAvail(departmentID, communication) {
                   }).toArray();
                   console.log(result[0]);
                   return result[0];
-                  // Perform the find function
-                  // collection.find({
-                  //    'availability': true,
-                  //    'Department_id' : departmentID,
-                  //    'typeOfComm' : communication
-                  //
-                  // }).toArray(function(err, docs) {
 
              }
-                  // let data = await collection.find({
-                  //   'availability': true,
-                  //    'Department_id': departmentID,
-                  //     'typeofComm' : communication
-                  // });
-                  // console.log("Found the following records");
-                  // console.log(data);
-                  // return data;
 
 
 
