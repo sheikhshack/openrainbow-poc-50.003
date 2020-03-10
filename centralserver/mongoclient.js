@@ -27,6 +27,7 @@ async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
                   const collection = await client.db(dbName).collection('Agent');
                   // Perform the find function
+<<<<<<< Updated upstream
                   collection.find({
                      'availability': true,
                      'Department_id' : departmentID,
@@ -37,6 +38,16 @@ async function checkAvail(departmentID, communication) {
                   console.log(JSON.stringify(docs));
                   return JSON.stringify(docs);
              });
+=======
+                  let data = await collection.find({
+                    'availability': true,
+                     'Department_id': departmentID,
+                      'typeofComm' : communication
+                  });
+                  console.log("Found the following records");
+                  console.log(data);
+                  return data;
+>>>>>>> Stashed changes
 }
 
 
