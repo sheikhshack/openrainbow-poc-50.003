@@ -62,6 +62,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             });
 
         })
+
     );
 
     app.listen(3004, () =>
@@ -69,13 +70,34 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let department = req.body.department;
             let communication = req.body.communication;
             let problem = req.body.problem;
+
+            //debugging
+
+            console.log("Department requested is " + department);
+            console.log("Comms requested is " + communication);
+
+            let queueNumber;
+            let jid;
             // proceeds to query DB for matching CSA
             let data = await swaggyDatabase.checkAvail(department, communication);
-
-
+            console.log(data);
+            let onlineStatus = await rainbowMotherload.checkOnlineStatus(data.jid);
+            console.log("Online status: " + onlineStatus);
+            if (onlineStatus)
+            {
+                queueNumber = 0;
+                jid = data.jid;
+            }
+            else{
+                queueNumber = 100;
+                jid = null;
+            }
+            console.log(data.jid);
             // console.log(req.data.name);
             return res.send({
-                result: data.jid});
+                queueNumber: queueNumber,
+                jid: jid
+            });
         })
     );
 

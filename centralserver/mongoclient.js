@@ -17,7 +17,7 @@ client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
-                    checkAvail("Graduate Office","Chat")
+                    // checkAvail("Graduate Office","Chat")
 });
 
 
@@ -26,29 +26,31 @@ client.connect( function(err, client) {
 async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
                   const collection = await client.db(dbName).collection('Agent');
+                  let result = await client.db(dbName).collection('Agent').find({
+                      'availability': true,
+                      'Department_id' : departmentID,
+                      'typeOfComm' : communication
+                  }).toArray();
+                  console.log(result[0]);
+                  return result[0];
                   // Perform the find function
-<<<<<<< Updated upstream
-                  collection.find({
-                     'availability': true,
-                     'Department_id' : departmentID,
-                     'typeOfComm' : communication
-                     
-                  }).toArray(function(err, docs) {
-                  console.log("Found the following records");
-                  console.log(JSON.stringify(docs));
-                  return JSON.stringify(docs);
-             });
-=======
-                  let data = await collection.find({
-                    'availability': true,
-                     'Department_id': departmentID,
-                      'typeofComm' : communication
-                  });
-                  console.log("Found the following records");
-                  console.log(data);
-                  return data;
->>>>>>> Stashed changes
-}
+                  // collection.find({
+                  //    'availability': true,
+                  //    'Department_id' : departmentID,
+                  //    'typeOfComm' : communication
+                  //
+                  // }).toArray(function(err, docs) {
+
+             }
+                  // let data = await collection.find({
+                  //   'availability': true,
+                  //    'Department_id': departmentID,
+                  //     'typeofComm' : communication
+                  // });
+                  // console.log("Found the following records");
+                  // console.log(data);
+                  // return data;
+
 
 
 
