@@ -1,4 +1,3 @@
-
 // Setup Express web application
 const bodyParser = require("body-parser");
 
@@ -18,22 +17,35 @@ client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
-
-                    //toggleAvail("3006bf0f41a74dedb0c8e4da79b10be8@sandbox-all-in-one-rbx-prod-1.rainbow.sbg")
-              
                
-                    
-               
-               
-
+                    //toggleAvail("testesting")
+                    //dateFromObjectId("5e6861395e3ea10db6e2fa51")
+                    addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
 
 });
 
-/*
-Checks availability of ALL agents of a specific department
-------------------------------------
-checkAvail("Graduate Office","Chat")
+// please ignore this 2 functions. I will keep this as reference.
+async function dateFRomObjectId(date) {
+    return Math.floor( date.getTime() / 1000).toString(16) + "0000000000000000"
+}
+                      
+async function dateFromObjectId(objectId) {
+                      let x = await new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
+                      console.log(x)
+                      };
+
+/**
+-----------------------------------------------------------------------------
+-------------------------- Agent Collection ---------------------------------
+------------------------ Department Collection ------------------------------
+-----------------------------------------------------------------------------
+*/
+
+/**
+    Checks availability of ALL agents of a specific department
+    ------------------------------------
+    checkAvail("Graduate Office","Chat")
  */
  async function checkAvail(departmentID, communication) {
                   // Get the Departments collection
@@ -47,11 +59,11 @@ checkAvail("Graduate Office","Chat")
 
              }
 
-/*
- Adds new Agent as a new document in collection "Agent"
- Other fields will be given a default value
- ------------------------------------------------------------------------------
- addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
+/**
+     Adds new Agent as a new document in collection "Agent"
+     Other fields will be given a default value
+     ------------------------------------------------------------------------------
+     addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
  */
 async function addAgent(_id, jid, name, typeOfComm, departmentID){
     await client.db(dbName).collection('Agent').insertOne({
@@ -69,12 +81,12 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
                                                     })
 }
 
-/*
- Modify 1 CSA Agent propertie(s) identifiable by JID
- let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
- newProperties is a JSON object
- ---------------------------------------------------------
- modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
+/**
+    Modify 1 CSA Agent propertie(s) identifiable by JID
+     let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
+     newProperties is a JSON object
+     ---------------------------------------------------------
+     modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
  */
 async function modifyCommAndDept(typeOfComm, Department_id, newProperties) {
     let oldProperties = {'typeOfComm' : typeOfComm , 'Department_id' : Department_id}
@@ -93,9 +105,9 @@ async function modifyCommAndDept(typeOfComm, Department_id, newProperties) {
 
 
 /*
- Given CSA's JID, Increment no of sessions
- --------------------------------
- IncrementAgentSession("testJID")
+    Given CSA's JID, Increment no of sessions
+    --------------------------------
+    IncrementAgentSession("testJID")
  */
 
 
@@ -131,16 +143,20 @@ async function IncrementAgentSession(jid) {
 }
 
 /**
- Create a function that listens for engage/disengage
- --------------------------------
- toggleAvail("TestJID")
+    Create a function that listens for engage/disengage
+    ----------------------
+    toggleAvail("TestJID")
  */
 
 async function toggleAvail(jid) {
     // First check the availability of the CSA
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
                                                                       {'jid' : jid},
-                                                                      {projection : {'availability' : 1 }})
+                                                                      {projection : {'availability' : 1 ,
+                                                                      '_id' : 1
+                                                                      }
+                                                                      })
+    //console.log(JSONObj.getTimeStamp())
     if (JSONObj == null) {
         console.log("Wrong JID input")
         return
@@ -160,16 +176,37 @@ async function toggleAvail(jid) {
     
 
 
+/**
+ -----------------------------------------------------------------------------
+ ---------------------- PendingRequests Collection ---------------------------
+ -----------------------------------------------------------------------------
+ */
+                      
+/**
+    Adds Pending Request to PendingRequests Database
+    addPendingRequest("tinkitwong@gmail.com", "Graduate Office", "Enquiry")
+ */
 
-
-
-
+async function addPendingRequest(userEmail, departmentID, Enquiry){
+    await client.db(dbName).collection('PendingRequests').insertOne({
+                                                //'ticketNo' : ticketNo,
+                                                'userEmail' : userEmail,
+                                                'Department_id' : departmentID,
+                                                'Enquiry' : Enquiry,
+                                                'TimeStamp' : String(new Date())
+                                                
+                                                }, function(err, res) {
+                                                if (err) throw err;
+                                                console.log("Document inserted")
+                                                })
+                      }
 
 
 module.exports = {
     checkAvail: checkAvail,
     addAgent: addAgent,
-    modifyAgentProp: modifyAgentProp,
+    modifyCommAndDept: modifyCommAndDept,
     IncrementAgentSession : IncrementAgentSession,
-    toggleAvail : toggleAvail
+    toggleAvail : toggleAvail,
+    addPendingRequest : addPendingRequest
 };
