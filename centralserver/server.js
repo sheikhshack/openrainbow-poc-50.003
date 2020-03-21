@@ -79,8 +79,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let queueNumber;
             let jid;
             // proceeds to query DB for matching CSA
-            let data = await swaggyDatabase.checkAvail(department, communication);
-            console.log(data);
+            let data = await swaggyDatabase.checkRequestedAgents(department, communication)[0];
             let onlineStatus = await rainbowMotherload.checkOnlineStatus(data.jid);
             console.log("Online status: " + onlineStatus);
             if (onlineStatus)
@@ -100,6 +99,134 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             });
         })
     );
+
+    // The following is an attempt at full routing + handling mechanisms
+
+    app.listen(3005, () =>
+        app.post('/getRequiredCSAbeta', async(req, res) => {
+            let department = req.body.department;
+            let communication = req.body.communication;
+            let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
+            console.log(queueNumber);
+
+            // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
+            let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+
+            // by the end of this sequence, you should get a listofagents that are online and not overloaded
+            for (var i = listOfAgents.length-1; i >= 0; i--){
+                let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+                let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+                if (!onlineStatus || !overLoadedStatus){
+                    // if not online, they are removed from the array
+                    listOfAgents.splice(i, 1);
+                }
+            }
+
+            // final check that the right agent is online and return it to client for immediate connection
+            if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+                // update all the agent stuff first
+                await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+                // sends the JID, queueNumber also sent for Debugging
+                return res.send({
+                    queueNumber: queueNumber,
+                    jid: listOfAgents[0].jid
+                });
+            }
+            // this suggests that all candidate agents are busy or not available for this scenario. In this case,
+            // we commence v1.0 of the queueing algo
+            else
+            {
+                // since all agents are full, we now proceed to give the client a queueNumber. This queueNumber will be
+                // requested by reposted under a new method that employs a loop of some sort (every 3s)
+                return res.send({
+                    queueNumber: queueNumber,
+                    jid: null
+                });
+
+            }
+
+        })
+    );
+
+    app.listen(3006, () =>
+        app.post('/checkQueueStatusbeta', async(req, res) => {
+            // basically only need queueNumber if this actually goes well but ofc it doesnt
+            let department = req.body.department;
+            let communication = req.body.communication;
+            let queueNumber = req.body.queueNumber;
+            console.log(queueNumber);
+
+            let currentlyServing = swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+            console.log(currentlyServing);
+            // checks the queueNumber to see if its ready for servicing
+            if (queueNumber < currentlyServing )
+            {
+                let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+
+                // by the end of this sequence, you should get a listofagents that are online and not overloaded
+                for (var i = listOfAgents.length-1; i >= 0; i--){
+                    let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+                    let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+                    if (!onlineStatus || !overLoadedStatus){
+                        // if not online, they are removed from the array
+                        listOfAgents.splice(i, 1);
+                        console.log(listOfAgents);
+                    }
+                }
+
+                // final check that the right agent is online and return it to client for immediate connection
+                if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+                    // update all the agent stuff first
+                    await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+                    // sends the JID, queueNumber also sent for Debugging
+                    return res.send({
+                        queueNumber: queueNumber,
+                        jid: listOfAgents[0].jid
+                    });
+                }
+
+                else
+                {
+                    return res.send({
+                        queueNumber: queueNumber,
+                        jid: null
+                    })
+                }
+            }
+            else{
+                // queue number still not ready, continue asking to retry by sending back same shit
+                return res.send({
+                    queueNumber: queueNumber,
+                    jid: null
+                })
+            }
+
+        })
+    );
+
+    app.listen(3007, () =>
+        app.post('/endChatInstance', async(req, res) => {
+            // requires these 3 params
+            console.log("Entered this method");
+            let department = req.body.department;
+            let communication = req.body.communication;
+            let queueNumber = req.body.queueNumber;
+            let jidOfAgent = req.body.jid;
+
+            // ok so first step is to update agent details
+            await swaggyDatabase.completedARequest(jidOfAgent, department);
+            // thats it if it works
+            return res.send({
+                status: "Success",
+                jid: null
+
+            });
+        }));
+
+
+
+
 
 
 

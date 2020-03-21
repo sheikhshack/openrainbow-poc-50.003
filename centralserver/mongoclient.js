@@ -47,17 +47,18 @@ async function dateFromObjectId(objectId) {
     ------------------------------------
     checkAvail("Graduate Office","Chat")
  */
- async function checkAvail(departmentID, communication) {
+// Function tested for CATA testing
+ async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
                   let result = await client.db(dbName).collection('Agent').find({
                       'availability': true,
                       'Department_id' : departmentID,
                       'typeOfComm' : communication
-                  }).toArray();
-                  console.log(result[0]);
-                  return result[0];
+                  }).sort({ servicedToday: 1}).toArray();
+                  return result;
 
              }
+
 
 /**
      Adds new Agent as a new document in collection "Agent"
@@ -109,23 +110,26 @@ async function modifyCommAndDept(typeOfComm, Department_id, newProperties) {
     --------------------------------
     IncrementAgentSession("testJID")
  */
-
-
-async function IncrementAgentSession(jid) {
+/**
+ * @return {boolean}
+ */
+async function incrementAgentSession(jid) {
     // returns a document that supports JSON format.
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
                                                               {'jid' : jid},
                                                               {projection : {
                                                                              'currentActiveSessions' : 1 ,
                                                                              'reserve' : 1
-                                                                      }})
+                                                                      }});
     if (JSONObj == null) {
-        console.log("Wrong JID input")
-        return}
+        console.log("Wrong JID input");
+        return false;
+
+    }
     if (JSONObj.currentActiveSessions < JSONObj.reserve ) {
         // increment by currentActiveSessions by 1
-        let newActiveSession = JSONObj.currentActiveSessions +=1
-        console.log(newActiveSession)
+        let newActiveSession = JSONObj.currentActiveSessions +=1;
+        console.log(newActiveSession);
         
         
         await client.db(dbName).collection('Agent').updateOne(
@@ -133,14 +137,39 @@ async function IncrementAgentSession(jid) {
                                                               {$set: {'currentActiveSessions' : newActiveSession}},
                                                               function(err, res) {
                                                               if (err) throw err;
-                                                                console.log("Number of Session has been incremented.")
+                                                              console.log("Number of Session has been incremented.");
+                                                              return true;
                                                               })
     }
     else {
-        console.log("Please wait. Current CSA is working at maximum capacity")
+        console.log("Please wait. Current CSA is working at maximum capacity");
+        return false;
     }
     
 }
+
+async function checkAgentSession(jid) {
+    // returns a document that supports JSON format.
+    let JSONObj = await client.db(dbName).collection('Agent').findOne(
+        {'jid': jid},
+        {
+            projection: {
+                'currentActiveSessions': 1,
+                'reserve': 1
+            }
+        });
+
+
+    if (JSONObj.currentActiveSessions < JSONObj.reserve) {
+        return true;
+    } else {
+        console.log("Please wait. Current CSA is working at maximum capacity");
+        return false;
+    }
+
+}
+
+
 
 /**
     Create a function that listens for engage/disengage
@@ -199,14 +228,63 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
                                                 if (err) throw err;
                                                 console.log("Document inserted")
                                                 })
-                      }
+
+    }
+
+// The following set of functions are for queue management
+
+async function getDepartmentCurrentQueueNumber(departmentID){
+    let result = await client.db(dbName).collection('Department').findOne({
+        '_id' : departmentID
+    });
+
+    return result.currentQueueNumber;
+}
+
+async function incrementDepartmentCurrentQueueNumber(departmentID){
+    await client.db(dbName).collection('Department').updateOne(
+        {'_id' : departmentID},
+        {$inc: {'servicedRequests' : 1, 'currentQueueNumber': 1}},
+        function(err, res) {
+            if (err) throw err;
+
+        })
+}
+
+async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
+    let result = await client.db(dbName).collection('Department').findOneAndUpdate(
+        {'_id': departmentID },
+        {$inc: {'totalActiveRequests' : 1}
+    });
+
+    return result.value.totalActiveRequests;
+}
+// updates the fieldset for department and Agent to indicate queue availability and Logging
+async function completedARequest(jid, departmentID){
+    await client.db(dbName).collection('Agent').updateOne(
+        {'jid' : jid},
+        {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
+
+    await client.db(dbName).collection('Department').updateOne(
+        {'_id' : departmentID},
+        {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
+        function(err, res) {
+            if (err) throw err;
+
+        })
+}
 
 
 module.exports = {
-    checkAvail: checkAvail,
+    checkRequestedAgents: checkRequestedAgents,
+    getDepartmentCurrentQueueNumber: getDepartmentCurrentQueueNumber,
+    incrementDepartmentCurrentQueueNumber: incrementDepartmentCurrentQueueNumber,
+    getAndSetDepartmentLatestActiveRequestNumber: getAndSetDepartmentLatestActiveRequestNumber,
     addAgent: addAgent,
     modifyCommAndDept: modifyCommAndDept,
-    IncrementAgentSession : IncrementAgentSession,
+    checkAgentSession: checkAgentSession,
+    incrementAgentSession : incrementAgentSession,
+    completedARequest: completedARequest,
     toggleAvail : toggleAvail,
     addPendingRequest : addPendingRequest
 };
