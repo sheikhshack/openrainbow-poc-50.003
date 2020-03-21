@@ -125,6 +125,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             // final check that the right agent is online and return it to client for immediate connection
             if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
                 // update all the agent stuff first
+                
                 await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
                 await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
                 // sends the JID, queueNumber also sent for Debugging
@@ -155,19 +156,29 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let department = req.body.department;
             let communication = req.body.communication;
             let queueNumber = req.body.queueNumber;
+                 
+                 console.log("This is my Department");
+                 console.log(department);
+            console.log("This is my queue Number");
             console.log(queueNumber);
 
             let currentlyServing = swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+            console.log("The department is now currently serving");
+                 
             console.log(currentlyServing);
             // checks the queueNumber to see if its ready for servicing
-            if (queueNumber < currentlyServing )
+            if (queueNumber < currentlyServing)
             {
+                console.log(queueNumber);
+                 console.log(currentlyServing);
                 let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
 
                 // by the end of this sequence, you should get a listofagents that are online and not overloaded
                 for (var i = listOfAgents.length-1; i >= 0; i--){
                     let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
                     let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+                    console.log(onlineStatus)
+                    console.log(overLoadedStatus)
                     if (!onlineStatus || !overLoadedStatus){
                         // if not online, they are removed from the array
                         listOfAgents.splice(i, 1);
@@ -182,7 +193,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                     // sends the JID, queueNumber also sent for Debugging
                     return res.send({
                         queueNumber: queueNumber,
-                        jid: listOfAgents[0].jid
+                        jid: listOfAgents[0].jid,
+                                    position: queueNumber - currentlyServing
                     });
                 }
 

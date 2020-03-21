@@ -20,9 +20,9 @@ client.connect( function(err, client) {
                
                     //toggleAvail("testesting")
                     //dateFromObjectId("5e6861395e3ea10db6e2fa51")
-                    addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
+                    //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
-
+                    reset();
 });
 
 // please ignore this 2 functions. I will keep this as reference.
@@ -55,6 +55,8 @@ async function dateFromObjectId(objectId) {
                       'Department_id' : departmentID,
                       'typeOfComm' : communication
                   }).sort({ servicedToday: 1}).toArray();
+                  //console.log("This is the requested Agents")
+                      //console.log(result)
                   return result;
 
              }
@@ -214,6 +216,8 @@ async function toggleAvail(jid) {
 /**
     Adds Pending Request to PendingRequests Database
     addPendingRequest("tinkitwong@gmail.com", "Graduate Office", "Enquiry")
+ 
+
  */
 
 async function addPendingRequest(userEmail, departmentID, Enquiry){
@@ -237,6 +241,7 @@ async function getDepartmentCurrentQueueNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOne({
         '_id' : departmentID
     });
+    console.log(result.currentQueueNumber);
 
     return result.currentQueueNumber;
 }
@@ -251,6 +256,8 @@ async function incrementDepartmentCurrentQueueNumber(departmentID){
         })
 }
 
+// updates the department's current active session
+// return user's current queue number
 async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOneAndUpdate(
         {'_id': departmentID },
@@ -274,6 +281,26 @@ async function completedARequest(jid, departmentID){
         })
 }
 
+// hard resets all department fields.
+async function reset() {
+                      await client.db(dbName).collection('Department').updateMany({},
+                                                                                  {$set: {
+                                                                                  'currentQueueNumber' : 0,
+                                                                                  'totalActiveRequests' : 0,
+                                                                                  'servicedRequests' : 0,
+                                                                                  'failedRequests' : 0,
+                                                                                  'servicedToday' : 0
+                                                                                  }})
+                     await client.db(dbName).collection('Agent').updateMany({},
+                                                                            {$set: {
+                                                                            'currentActiveSessions' : 0,
+                                                                            'servicedToday' : 0
+                                                                            }})
+}
+                      
+
+                      
+                      
 
 module.exports = {
     checkRequestedAgents: checkRequestedAgents,
@@ -286,5 +313,6 @@ module.exports = {
     incrementAgentSession : incrementAgentSession,
     completedARequest: completedARequest,
     toggleAvail : toggleAvail,
-    addPendingRequest : addPendingRequest
+    addPendingRequest : addPendingRequest,
+    reset : reset
 };
