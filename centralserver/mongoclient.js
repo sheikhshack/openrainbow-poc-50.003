@@ -56,7 +56,7 @@ async function dateFromObjectId(objectId) {
                       'typeOfComm' : communication
                   }).sort({ servicedToday: 1}).toArray();
                   //console.log("This is the requested Agents")
-                      //console.log(result)
+                //console.log(result)
                   return result;
 
              }
@@ -235,6 +235,11 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
 
     }
 
+/**
+-----------------------------------------------------------------------------
+---------------------- Queue Management -------------------------------------
+-----------------------------------------------------------------------------
+*/
 // The following set of functions are for queue management
 
 async function getDepartmentCurrentQueueNumber(departmentID){

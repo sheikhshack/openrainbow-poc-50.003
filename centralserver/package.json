@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "cors": "^2.8.5"
+  },
+  "scripts" : {
+      "start" : "node server.js"
   }
 }

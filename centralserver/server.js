@@ -115,13 +115,62 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             // by the end of this sequence, you should get a listofagents that are online and not overloaded
             for (var i = listOfAgents.length-1; i >= 0; i--){
                 let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+                 console.log("Checking Online Status")
+                 console.log(listOfAgents[i].name)
+                 console.log(onlineStatus)
                 let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+                 console.log("Checking overLoadedStatus")
+                 console.log(listOfAgents[i].name)
+                 console.log(overLoadedStatus)
                 if (!onlineStatus || !overLoadedStatus){
                     // if not online, they are removed from the array
                     listOfAgents.splice(i, 1);
                 }
             }
-
+            console.log("printing list of agents")
+            console.log(listOfAgents)
+            
+           
+            
+                 
+            // check here if servicedToday field is the same for all agents in the current listofAgents
+             var servicedTodayArr = []
+             for (var i = 0; i< listOfAgents.length; i++) {
+                servicedTodayArr.push(listOfAgents[i].servicedToday)
+             }
+             console.log("sadfasdf")
+             console.log(servicedTodayArr)
+             var count = 0
+             if (listOfAgents.length > 1) {
+                 console.log("listOfAgents.length > 1")
+                 for (var i = 0; i < listOfAgents.length; i++) {
+                    if (i != listOfAgents.length-1) {
+                        // check for the case when ServicedToday is all the same
+                        if (servicedTodayArr[i] == servicedTodayArr[i+1]) {
+                            count ++
+                        }
+                    }
+                    
+                 }
+                 console.log("This is the count")
+                 console.log(count)
+                 if (count == servicedTodayArr.length-1){
+                    var assignedAgentIndex = queueNumber % listOfAgents.length
+                    console.log("sdayfgakhsjdfksd")
+                    console.log(assignedAgentIndex)
+                     if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
+                        await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                        await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
+                        return res.send({
+                                     queueNumber: queueNumber,
+                                     jid: listOfAgents[assignedAgentIndex].jid
+                                     })
+                     }
+                 }
+             }
+                 
+                 
+                 
             // final check that the right agent is online and return it to client for immediate connection
             if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
                 // update all the agent stuff first
