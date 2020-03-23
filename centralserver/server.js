@@ -211,7 +211,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             console.log("This is my queue Number");
             console.log(queueNumber);
 
-            let currentlyServing = swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+            let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
             console.log("The department is now currently serving");
                  
             console.log(currentlyServing);
@@ -242,8 +242,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                     // sends the JID, queueNumber also sent for Debugging
                     return res.send({
                         queueNumber: queueNumber,
-                        jid: listOfAgents[0].jid,
-                                    position: queueNumber - currentlyServing
+                        jid: listOfAgents[0].jid
+
                     });
                 }
 
@@ -251,7 +251,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 {
                     return res.send({
                         queueNumber: queueNumber,
-                        jid: null
+                        jid: null,
+                        position: queueNumber - currentlyServing
                     })
                 }
             }
@@ -259,7 +260,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 // queue number still not ready, continue asking to retry by sending back same shit
                 return res.send({
                     queueNumber: queueNumber,
-                    jid: null
+                    jid: null,
+                    position: queueNumber - currentlyServing
                 })
             }
 
