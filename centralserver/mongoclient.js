@@ -271,19 +271,39 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
 
     return result.value.totalActiveRequests;
 }
+                      
+                      
+                      
 // updates the fieldset for department and Agent to indicate queue availability and Logging
 async function completedARequest(jid, departmentID){
-    await client.db(dbName).collection('Agent').updateOne(
-        {'jid' : jid},
-        {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
+                      let JSONObj = await client.db(dbName).collection('Agent').findOne(
+                                                                                        {'jid' : jid},
+                                                                                        {projection : {
+                                                                                                        'currentActiveSessions' : 1
+                                                                                        }});
+                      if (JSONObj == null) {
+                          console.log("Wrong JID input");
+                          return false;
 
-    await client.db(dbName).collection('Department').updateOne(
-        {'_id' : departmentID},
-        {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
-        function(err, res) {
-            if (err) throw err;
-
-        })
+                      }
+                      if (JSONObj.currentActiveSessions > 0) {
+                      // decrement currentActiveSessions by 1
+                      // increment servicedToday by 1
+                      await client.db(dbName).collection('Agent').updateOne(
+                                                                            {'jid' : jid},
+                                                                            {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
+                      }
+                      else {
+                      console.log("ERROR : Current Active Session is not <= 0")
+                      }
+                      
+                      
+                      await client.db(dbName).collection('Department').updateOne(
+                                                                                 {'_id' : departmentID},
+                                                                                 {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
+                                                                                 function(err, res) {
+                                                                                 if (err) throw err;
+                                                                                 })
 }
 
 // hard resets all department fields.
