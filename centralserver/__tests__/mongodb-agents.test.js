@@ -1,6 +1,6 @@
 const {MongoClient} = require('mongodb');
 
-
+// TEST Agent Collection
 describe('TEST: Agent Collection', () => {
          let connection;
          let db;
@@ -41,7 +41,7 @@ describe('TEST: Agent Collection', () => {
          
          const mockAgent_Three = {
          '_id' : 'AAC',
-         'jid' : 'some-jid',
+         'jid' : 'third-jid',
          'Department_id' : 'Graduate Office',
          'name' : 'Johnson',
          'availability' : true,
@@ -49,6 +49,19 @@ describe('TEST: Agent Collection', () => {
          'currentActiveSessions' : 0,
          'reserve' : 3
          };
+         
+         const mockAgent_Four = {
+         '_id' : 'AAD',
+         'jid' : 'overloaded-jid',
+         'Department_id' : 'Finance Office',
+         'name' : 'Daddy Johson',
+         'availability' : true,
+         'typeOfComm' : ["Audio", "Video", "Chat"],
+         'currentActiveSessions' : 3,
+         'reserve' : 3
+         };
+         
+         
          
          it('AGENT COLLECTION | addAgent(_id, jid, name, typeOfComm, departmentID)', async () => {
             const agent = db.collection('Agent');
@@ -131,7 +144,107 @@ describe('TEST: Agent Collection', () => {
                                                }});
             expect(result.currentActiveSessions).toBe(1)
             })
-        
+         
+         
+         it('AGENT COLLECTION | incrementAgentSession(jid) - OVERLOAD AGENT', async() => {
+            const agent = db.collection('Agent');
+            const jid = 'overloaded-jid';
+            let JSONObj = await agent.findOne(
+                                              {'jid' : jid},
+                                              {projection : {
+                                              'currentActiveSessions' : 1 ,
+                                              'reserve' : 1
+                                              }});
+            if (JSONObj == null) {
+                console.log("TEST | incrementAgentSession | Wrong JID input");
+                return false;
+            }
+            if (JSONObj.currentActiveSessions < JSONObj.reserve) {
+            let newActiveSession = JSONObj.currentActiveSessions +=1;
+            await agent.updateOne({'jid' : jid},
+                                  {$set: {'currentActiveSessions' : newActiveSession}})
+            
+            console.log("Number of Session has been incremented")
+            }
+            else {
+                console.log("Please wait. Current CSA is working at maximum capacity")
+            }
+            
+            const result = await agent.findOne(
+                                               {'jid' : jid},
+                                               {projection : {
+                                               'currentActiveSessions' : 1 ,
+                                               }});
+            expect(result.currentActiveSessions).toBe(3);
+         })
+         
+         it('AGENT COLLECTION | checkAgentSession(jid)', async()=> {
+            const agent = db.collection('Agent');
+            const jid_0 = 'another_jid'
+            const jid_1 = 'some-jid'
+            
+            const agentOne = await agent.findOne(
+                                                 {'jid' : jid_0},
+                                                 {projection : {
+                                                 'currentActiveSessions' : 1 ,
+                                                 }});
+            
+            const agentTwo = await agent.findOne(
+                                                 {'jid' : jid_1},
+                                                 {projection : {
+                                                 'currentActiveSessions' : 1 ,
+                                                 }});
+            console.log(agentTwo)
+            expect(agentOne.currentActiveSessions).toBe(1)
+            expect(agentTwo.currentActiveSessions).toBe(0)
+            })
+            
+         it('AGENT COLLECTION | checkAgentSession(jid)', async() => {
+            const agent = db.collection('Agent');
+            const jid = 'overloaded-jid'
+            await agent.insertOne(mockAgent_Four);
+            let result = await agent.findOne(
+                                             {'jid': jid},
+                                             {projection: {
+                                             'currentActiveSessions': 1,
+                                             'reserve': 1
+                                             }});
+            expect(result.currentActiveSessions).toBe(3)
+            })
+         
+         it('AGENT COLLECTION | toggleAvail(jid)', async() => {
+            const agent = db.collection('Agent')
+            const jid = 'third-jid'
+            let result = await agent.findOne({'jid' : jid},
+                                              {projection :
+                                              {
+                                              'availability' : 1 ,
+                                              '_id' : 1
+                                              }})
+            if (result == null) {
+                console.log("Wrong JID input")
+                return
+            }
+            console.log(result.availability)
+            if (result.availability == false) {
+                console.log("CSA agent is still unavailable. Please wait a while more")
+            }
+            await agent.updateOne(
+                                  {'jid' : jid},
+                                  {$set:
+                                  {'availability' : false}
+                                  })
+            let final = await agent.findOne(
+                                            {'jid' : jid},
+                                            {projection :
+                                            {
+                                            'availability' : 1 ,
+                                            '_id' : 1
+                                            }})
+            expect(final.availability).toBe(false)
+            })
+            
+         
          
          
 });
