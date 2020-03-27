@@ -123,6 +123,7 @@ describe('TEST: QUEUE MANAGEMENT', () => {
                    await db.collection('Department').deleteMany({});
                    const Dpt = db.collection('Department');
                    const agent = db.collection('Agent');
+                   await db.collection('PendingRequests').deleteMany({});
                    // add the 2 departments into the Department Collection
                    await Dpt.insertOne(mockDpt_One);
                    await Dpt.insertOne(mockDpt_Two);

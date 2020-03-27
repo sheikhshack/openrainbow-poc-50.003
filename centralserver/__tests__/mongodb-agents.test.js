@@ -113,6 +113,8 @@ describe('TEST: Agent Collection', () => {
                                                           });
                    db = await connection.db();
                    await db.collection('Agent').deleteMany({});
+                   await db.collection('PendingRequests').deleteMany({});
+                   await db.collection('Department').deleteMany({});
                    });
 
          afterAll(async () => {
@@ -189,7 +191,8 @@ describe('TEST: Agent Collection', () => {
             await agent.insertOne(mockAgent_Four);
             let newProperties = {"typeOfComm" : ['Video','Audio','Chat']};
             await modifyCommAndDept(mockAgent_Four.jid, newProperties)
-            const result = await agent.findOne({'jid' : 'overloaded-jid'})
+            const result = await agent.findOne({'jid' : 'overloaded-jid'},
+                                               {projection: {'typeOfComm': 1}})
             expect(result.typeOfComm).toEqual(newProperties['typeOfComm'])
          })
          

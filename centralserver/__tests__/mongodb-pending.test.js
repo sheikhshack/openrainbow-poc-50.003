@@ -4,6 +4,16 @@ const {MongoClient} = require('mongodb');
 describe('TEST: Pending Collection', () => {
          let connection;
          let db;
+         
+         async function addPendingRequest(userEmail, departmentID, Enquiry){
+         await db.collection('PendingRequests').insertOne({'userEmail' : userEmail,
+                                                          'Department_id' : departmentID,
+                                                          'Enquiry' : Enquiry,
+                                                          'TimeStamp' : String(new Date())
+                                                          }, function(err, res) {
+                                                          if (err) throw err;
+                                                          console.log("Document inserted")
+                                                          })}
 
          beforeAll(async () => {
                    connection = await MongoClient.connect(process.env.MONGO_URL, {
@@ -12,7 +22,8 @@ describe('TEST: Pending Collection', () => {
                                                           });
                    db = await connection.db();
                    await db.collection('PendingRequests').deleteMany({});
-                   
+                   await db.collection('Agent').deleteMany({});
+                   await db.collection('Department').deleteMany({});
                    });
 
          afterAll(async () => {
@@ -40,13 +51,7 @@ describe('TEST: Pending Collection', () => {
          it('PENDING COLLECTION | addPendingRequest(userEmail, departmentID, Enquiry)', async() => {
             const pendingCollection = db.collection('PendingRequests');
             
-            await pendingCollection.insertOne({
-                                              'userEmail' : mockClient_Three.userEmail,
-                                              'Department_id' : mockClient_Three.Department_id,
-                                              'Enquiry' : mockClient_Three.Enquiry,
-                                              'TimeStamp' : String(new Date())
-                                              })
-
+            await addPendingRequest(mockClient_Three.userEmail,mockClient_Three.Department_id,mockClient_Three.Enquiry)
             const result = await pendingCollection.findOne({
                                                            'userEmail': 'tohcitybro@gmail.com.sg'
                                                            })
@@ -56,24 +61,7 @@ describe('TEST: Pending Collection', () => {
             expect(result.Enquiry).toBe(mockClient_Three.Enquiry)
             })
          
-         it('PENDING COLLECTION | addPendingRequest(userEmail, departmentID, Enquiry)', async() => {
-         const pendingCollection = db.collection('PendingRequests');
          
-         await pendingCollection.insertOne({
-                                           'userEmail' : mockClient_Three.userEmail,
-                                           'Department_id' : mockClient_Three.Department_id,
-                                           'Enquiry' : mockClient_Three.Enquiry,
-                                           'TimeStamp' : String(new Date())
-                                           })
-
-         const result = await pendingCollection.findOne({
-                                                        'userEmail': 'tohcitybro@gmail.com.sg'
-                                                        })
-         
-         expect(result.userEmail).toBe(mockClient_Three.userEmail)
-         expect(result.Department_id).toBe(mockClient_Three.Department_id)
-         expect(result.Enquiry).toBe(mockClient_Three.Enquiry)
-         })
          
          
          })
