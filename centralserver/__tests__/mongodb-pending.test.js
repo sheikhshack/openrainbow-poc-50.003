@@ -11,6 +11,8 @@ describe('TEST: Pending Collection', () => {
                                                           useUnifiedTopology: true
                                                           });
                    db = await connection.db();
+                   await db.collection('PendingRequests').deleteMany({});
+                   
                    });
 
          afterAll(async () => {

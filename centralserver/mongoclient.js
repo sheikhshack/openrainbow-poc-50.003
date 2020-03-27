@@ -22,7 +22,8 @@ client.connect( function(err, client) {
                     //dateFromObjectId("5e6861395e3ea10db6e2fa51")
                     //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
-                    reset();
+               
+                    //reset();
 });
 
 // please ignore this 2 functions. I will keep this as reference.
@@ -268,7 +269,7 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
         {'_id': departmentID },
         {$inc: {'totalActiveRequests' : 1}
     });
-    console.log(result);
+    //console.log(result);
     // if (result.value == null){
     //     return null;
     // }
@@ -297,14 +298,10 @@ async function completedARequest(jid, departmentID){
                                                                             {'jid' : jid},
                                                                             {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
                       }
-<<<<<<< HEAD
-                      else { // means that <= 0
-                      console.log("ERROR : Current Active Session is = 0")
-=======
-                      else {
-                      console.log("ERROR : Current Active Session is not <= 0");
 
->>>>>>> master
+                      else { // means that <= 0
+                      console.log("ERROR : Current Active Session is = 0");
+
                       }
 
                       
@@ -318,7 +315,7 @@ async function completedARequest(jid, departmentID){
 }
 
 // hard resets all department fields.
-async function reset() {
+async function reset(){
                       await client.db(dbName).collection('Department').updateMany({},
                                                                                   {$set: {
                                                                                   'currentQueueNumber' : 0,

@@ -6,11 +6,13 @@ describe('TEST: Agent Collection', () => {
          let db;
 
          beforeAll(async () => {
+                   
                    connection = await MongoClient.connect(process.env.MONGO_URL, {
                                                           useNewUrlParser: true,
                                                           useUnifiedTopology: true
                                                           });
                    db = await connection.db();
+                   await db.collection('Agent').deleteMany({});
                    });
 
          afterAll(async () => {
@@ -193,7 +195,7 @@ describe('TEST: Agent Collection', () => {
                                                  {projection : {
                                                  'currentActiveSessions' : 1 ,
                                                  }});
-            console.log(agentTwo)
+            
             expect(agentOne.currentActiveSessions).toBe(1)
             expect(agentTwo.currentActiveSessions).toBe(0)
             })

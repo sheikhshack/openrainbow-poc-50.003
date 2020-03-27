@@ -114,7 +114,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
             // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
             let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-
+            console.log("Testing this list of agents for 1 agent online")
+            console.log(listOfAgents)
             // by the end of this sequence, you should get a listofagents that are online and not overloaded
             for (var i = listOfAgents.length-1; i >= 0; i--){
                 let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
@@ -144,7 +145,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
              console.log("sadfasdf")
              console.log(servicedTodayArr);
              var count = 0;
-             if (listOfAgents.length > 1) {createguest
+             if (listOfAgents.length > 1) {
                  console.log("listOfAgents.length > 1");
                  for (var i = 0; i < listOfAgents.length; i++) {
                     if (i != listOfAgents.length-1) {
@@ -158,31 +159,29 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                  console.log("This is the count")
                  console.log(count)
                  if (count == servicedTodayArr.length-1){
-<<<<<<< HEAD
+
                     var assignedAgentIndex = queueNumber  % listOfAgents.length
-=======
+
                     var assignedAgentIndex = (queueNumber) % listOfAgents.length
->>>>>>> master
+
                     console.log("sdayfgakhsjdfksd")
                     console.log(assignedAgentIndex)
                      if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
                         await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
                         await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
                         return res.send({
-<<<<<<< HEAD
-                                     queueNumber: queueNumber + 1,
-                                     jid: listOfAgents[assignedAgentIndex].jid
-=======
+
+
                                      queueNumber: queueNumber,
                                      jid: listOfAgents[assignedAgentIndex].jid,
                                      queueStatus: "ready"
->>>>>>> master
+
                                      })
                      }
                  }
              }
-                 
-                 
+            console.log("This is where im at ")
+            console.log(listOfAgents[0])
                  
             // final check that the right agent is online and return it to client for immediate connection
             if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
@@ -192,14 +191,12 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
                 // sends the JID, queueNumber also sent for Debugging
                 return res.send({
-<<<<<<< HEAD
-                    queueNumber: queueNumber + 1,
-                    jid: listOfAgents[0].jid
-=======
+
+
                     queueNumber: queueNumber,
                     jid: listOfAgents[0].jid,
                     queueStatus: "ready"
->>>>>>> master
+
                 });
             }
             // this suggests that all candidate agents are busy or not available for this scenario. In this case,
@@ -226,23 +223,23 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let communication = req.body.communication;
             let queueNumber = req.body.queueNumber;
                  
-             console.log("This is my Department");
-             console.log(department);
-            console.log("This is my queue Number");
-            console.log(queueNumber);
+            console.log("This is my Department");
+            //console.log(department);
+            console.log("This is my queue Number : ", queueNumber);
+            //console.log(queueNumber);
 
             let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
-            console.log("The department is now currently serving");
+            console.log("The department is now currently serving :", currentlyServing);
                  
-            console.log(currentlyServing);
+//            console.log(currentlyServing);
             // checks the queueNumber to see if its ready for servicing
             if (queueNumber < currentlyServing)
             {
                 console.log(queueNumber);
-                 console.log(currentlyServing);
+                console.log(currentlyServing);
                 let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
                 console.log(listOfAgents)
-                 console.log("asdjfygaisdyfg,askfhkuaysdfkauysdf")
+                console.log("asdjfygaisdyfg,askfhkuaysdfkauysdf")
 
                 // by the end of this sequence, you should get a listofagents that are online and not overloaded
                 for (var i = listOfAgents.length-1; i >= 0; i--){
@@ -279,6 +276,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 }
             }
             else{
+                 console.log("asldkfhasduyfgasdkufglasdifhalsudyfgblsdi")
                 // queue number still not ready, continue asking to retry by sending back same shit
                 return res.send({
                     queueNumber: queueNumber,
@@ -365,3 +363,9 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
 
 
 });
+
+/**
+ Write a code that prompts the user with "U ARE NOW READY TO BE SERVICED"
+ 
+ 
+ */
