@@ -23,6 +23,10 @@ client.connect( function(err, client) {
                     //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
                
+               
+               
+               
+               
                     //reset();
 });
 
@@ -49,7 +53,7 @@ async function dateFromObjectId(objectId) {
     checkAvail("Graduate Office","Chat")
  */
 // Function tested for CATA testing
- async function checkRequestedAgents(departmentID, communication) {
+async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
                   let result = await client.db(dbName).collection('Agent').find({
                       'availability': true,
@@ -91,10 +95,9 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
      ---------------------------------------------------------
      modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
  */
-async function modifyCommAndDept(typeOfComm, Department_id, newProperties) {
-    let oldProperties = {'typeOfComm' : typeOfComm , 'Department_id' : Department_id}
+async function modifyCommAndDept(jid, newProperties) {
     await client.db(dbName).collection('Agent').updateOne(
-                                                          oldProperties,
+                                                          {'jid' : jid},
                                                           {$set: newProperties},
                                                           function(err, res) {
                                                           if (err) throw err;
