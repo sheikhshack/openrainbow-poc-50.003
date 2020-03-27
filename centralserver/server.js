@@ -144,7 +144,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
              console.log("sadfasdf")
              console.log(servicedTodayArr);
              var count = 0;
-             if (listOfAgents.length > 1) {createguest
+             if (listOfAgents.length > 1) {
                  console.log("listOfAgents.length > 1");
                  for (var i = 0; i < listOfAgents.length; i++) {
                     if (i != listOfAgents.length-1) {
@@ -282,9 +282,15 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let communication = req.body.communication;
             let queueNumber = req.body.queueNumber;
             let jidOfAgent = req.body.jid;
+            let conversationID = req.body.convoID;
+            let convoHistory = req.body.convoHistory;
 
             // ok so first step is to update agent details
             let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department);
+            let endedConvo = await rainbowMotherload.getConversationDetails(conversationID);
+            console.log("ended convo is: ..... ")
+            console.log(endedConvo);
+
             // thats it if it works
             return res.send({
                     status: "Success",

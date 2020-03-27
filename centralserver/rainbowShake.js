@@ -7,7 +7,6 @@ const adminCredentials = require("./adminCredentials");
 const rainbowSDK = new NodeSDK(adminCredentials);
 rainbowSDK.start();
 
-
 function init() {
 
     rainbowSDK.events.on('rainbow_onerror', function(err) {
@@ -15,12 +14,9 @@ function init() {
         console.log("Connection to SANDBOX failed")
     });
 }
-
 async function createGuests(talkTime) {
         // I simplified the process with async-await because i lazy type
         let result = await rainbowSDK.admin.createAnonymousGuestUser(talkTime);
-
-
         return {
             "loginID" : result.loginEmail,
             "loginPass" : result.password,
@@ -59,10 +55,8 @@ async function createGuestWithName(name, ticketID){
     return {
         "loginID" : result.loginEmail,
         "loginPass" : result.password,
-
     }
 }
-
 
 async function checkOnlineStatus(id){
     // uses the presence api
@@ -72,18 +66,19 @@ async function checkOnlineStatus(id){
         return true;
     }
     return false;
-
-
 }
 
-
-
 async function queryAgentStatus(agentEmail) {
-       let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
-       // let data2 = await rainbowSDK.presence.getUserConnectedPresence()
-       //console.log(data);
-       return data;
+    let data = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
+    // let data2 = await rainbowSDK.presence.getUserConnectedPresence()
+    //console.log(data);
+    return data;
+}
+async function getConversationDetails(convoID) {
+    let convoData = await rainbowSDK.conversations.getConversationById(convoID);
+    return convoData;
 
+}
         // rainbowSDK.contacts.getContactByLoginEmail(agentEmail).then((queriedUser) => {
         //     if (queriedUser) {
         //
@@ -102,10 +97,11 @@ async function queryAgentStatus(agentEmail) {
         //
         // });
 
-}
+
 module.exports = {
     init: init,
     queryAgentStatus:queryAgentStatus,
+    getConversationDetails:getConversationDetails,
     createGuests:createGuests,
     createGuestWithName:createGuestWithName,
     createGuestWithTokenization: createGuestWithTokenization,

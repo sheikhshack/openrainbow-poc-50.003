@@ -235,6 +235,11 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
 
     }
 
+
+async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
+{
+
+}
 /**
 -----------------------------------------------------------------------------
 ---------------------- Queue Management -------------------------------------
