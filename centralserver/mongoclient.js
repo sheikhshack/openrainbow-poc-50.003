@@ -245,6 +245,7 @@ async function getDepartmentCurrentQueueNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOne({
         '_id' : departmentID
     });
+    console.log(result);
     console.log(result.currentQueueNumber);
 
     return result.currentQueueNumber;
@@ -267,6 +268,10 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
         {'_id': departmentID },
         {$inc: {'totalActiveRequests' : 1}
     });
+    console.log(result);
+    // if (result.value == null){
+    //     return null;
+    // }
 
     return result.value.totalActiveRequests;
 }
@@ -292,17 +297,24 @@ async function completedARequest(jid, departmentID){
                                                                             {'jid' : jid},
                                                                             {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
                       }
+<<<<<<< HEAD
                       else { // means that <= 0
                       console.log("ERROR : Current Active Session is = 0")
+=======
+                      else {
+                      console.log("ERROR : Current Active Session is not <= 0");
+
+>>>>>>> master
                       }
-                      
+
                       
                       await client.db(dbName).collection('Department').updateOne(
                                                                                  {'_id' : departmentID},
                                                                                  {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
                                                                                  function(err, res) {
                                                                                  if (err) throw err;
-                                                                                 })
+                                                                                 });
+                        return true;
 }
 
 // hard resets all department fields.
