@@ -34,7 +34,7 @@ async function dateFRomObjectId(date) {
 async function dateFromObjectId(objectId) {
                       let x = await new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
                       console.log(x)
-                      };
+                      }
 
 /**
 -----------------------------------------------------------------------------
@@ -71,34 +71,34 @@ async function checkRequestedAgents(departmentID, communication) {
 async function addAgent(_id, jid, name, typeOfComm, departmentID){
     await client.db(dbName).collection('Agent').insertOne({
                                                     '_id' : _id,
-                                                    'jid' : jid,
-                                                    'Department_id' : departmentID,
-                                                    'name' : name,
-                                                    'availability' : true,
-                                                    'typeOfComm' : typeOfComm,
-                                                    'currentActiveSessions' : 0,
-                                                    'resrve' : 0
-                                                    }, function(err, res) {
-                                                    if (err) throw err;
-                                                    console.log("Document inserted")
-                                                    })
+        'jid' : jid,
+        'Department_id' : departmentID,
+        'name' : name,
+        'availability' : true,
+        'typeOfComm' : typeOfComm,
+        'currentActiveSessions' : 0,
+        'resrve' : 0
+    }, function(err, res) {
+        if (err) throw err;
+        console.log("Document inserted");
+    })
 }
 
 /**
-    Modify 1 CSA Agent propertie(s) identifiable by JID
-     let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
-     newProperties is a JSON object
-     ---------------------------------------------------------
-     modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
+ Modify 1 CSA Agent propertie(s) identifiable by JID
+ let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
+ newProperties is a JSON object
+ ---------------------------------------------------------
+ modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
  */
 async function modifyCommAndDept(jid, newProperties) {
     await client.db(dbName).collection('Agent').updateOne(
-                                                          {'jid' : jid},
-                                                          {$set: newProperties},
-                                                          function(err, res) {
-                                                          if (err) throw err;
-                                                          console.log("Update Compelete.")
-                                                          })
+        {'jid' : jid},
+        {$set: newProperties},
+        function(err, res) {
+            if (err) throw err;
+            console.log("Update Compelete.");
+        })
 }
 
 
@@ -117,11 +117,11 @@ async function modifyCommAndDept(jid, newProperties) {
 async function incrementAgentSession(jid) {
     // returns a document that supports JSON format.
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
-                                                              {'jid' : jid},
-                                                              {projection : {
-                                                                             'currentActiveSessions' : 1 ,
-                                                                             'reserve' : 1
-                                                                      }});
+        {'jid' : jid},
+        {projection : {
+                'currentActiveSessions' : 1 ,
+                'reserve' : 1
+            }});
     if (JSONObj == null) {
         console.log("Wrong JID input");
         return false;
@@ -134,19 +134,19 @@ async function incrementAgentSession(jid) {
         
         
         await client.db(dbName).collection('Agent').updateOne(
-                                                              {'jid' : jid},
-                                                              {$set: {'currentActiveSessions' : newActiveSession}},
-                                                              function(err, res) {
-                                                              if (err) throw err;
-                                                              console.log("Number of Session has been incremented.");
-                                                              return true;
-                                                              })
+            {'jid' : jid},
+            {$set: {'currentActiveSessions' : newActiveSession}},
+            function(err, res) {
+                if (err) throw err;
+                console.log("Number of Session has been incremented.");
+                return true;
+            })
     }
     else {
         console.log("Please wait. Current CSA is working at maximum capacity");
         return false;
     }
-    
+
 }
 
 async function checkAgentSession(jid) {
@@ -173,35 +173,35 @@ async function checkAgentSession(jid) {
 
 
 /**
-    Create a function that listens for engage/disengage
-    ----------------------
-    toggleAvail("TestJID")
+ Create a function that listens for engage/disengage
+ ----------------------
+ toggleAvail("TestJID")
  */
 
 async function toggleAvail(jid) {
     // First check the availability of the CSA
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
-                                                                      {'jid' : jid},
-                                                                      {projection : {'availability' : 1 ,
-                                                                      '_id' : 1
-                                                                      }
-                                                                      })
+        {'jid' : jid},
+        {projection : {'availability' : 1 ,
+                '_id' : 1
+            }
+        });
     //console.log(JSONObj.getTimeStamp())
     if (JSONObj == null) {
-        console.log("Wrong JID input")
+        console.log("Wrong JID input");
         return
     }
-    console.log(JSONObj.availability)
+    console.log(JSONObj.availability);
     if (JSONObj.availability == false) {
         console.log("CSA agent is still unavailable. Please wait a while more")
     }
     await client.db(dbName).collection('Agent').updateOne(
-                                                          {'jid' : jid},
-                                                          {$set: {'availability' : false}},
-                                                          function(err, res) {
-                                                          if (err) throw err;
-                                                          console.log("CSA is now available")
-                                                          })
+        {'jid' : jid},
+        {$set: {'availability' : false}},
+        function(err, res) {
+            if (err) throw err;
+            console.log("CSA is now available")
+        })
 }
     
 
@@ -211,28 +211,28 @@ async function toggleAvail(jid) {
  ---------------------- PendingRequests Collection ---------------------------
  -----------------------------------------------------------------------------
  */
-                      
+
 /**
-    Adds Pending Request to PendingRequests Database
-    addPendingRequest("tinkitwong@gmail.com", "Graduate Office", "Enquiry")
+ Adds Pending Request to PendingRequests Database
+ addPendingRequest("tinkitwong@gmail.com", "Graduate Office", "Enquiry")
  
 
  */
 
 async function addPendingRequest(userEmail, departmentID, Enquiry){
     await client.db(dbName).collection('PendingRequests').insertOne({
-                                                //'ticketNo' : ticketNo,
-                                                'userEmail' : userEmail,
-                                                'Department_id' : departmentID,
-                                                'Enquiry' : Enquiry,
-                                                'TimeStamp' : String(new Date())
+        //'ticketNo' : ticketNo,
+        'userEmail' : userEmail,
+        'Department_id' : departmentID,
+        'Enquiry' : Enquiry,
+        'TimeStamp' : String(new Date())
                                                 
-                                                }, function(err, res) {
-                                                if (err) throw err;
-                                                console.log("Document inserted")
-                                                })
+    }, function(err, res) {
+        if (err) throw err;
+        console.log("Document inserted")
+    })
 
-    }
+}
 
 
 async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
@@ -240,13 +240,13 @@ async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
 
 }
 /**
------------------------------------------------------------------------------
----------------------- Queue Management -------------------------------------
------------------------------------------------------------------------------
-*/
+ -----------------------------------------------------------------------------
+ ---------------------- Queue Management -------------------------------------
+ -----------------------------------------------------------------------------
+ */
 // The following set of functions are for queue management
                       
-                      
+
 /**
  Given DepartmentID, returns Department Current Queue Number
  */
@@ -260,10 +260,10 @@ async function getDepartmentCurrentQueueNumber(departmentID){
     return result.currentQueueNumber;
 }
 
-                      
+
 /**
-Given DepartmentID, increase that department's current queue number
-*/
+ Given DepartmentID, increase that department's current queue number
+ */
 async function incrementDepartmentCurrentQueueNumber(departmentID){
     await client.db(dbName).collection('Department').updateOne(
         {'_id' : departmentID},
@@ -277,12 +277,12 @@ async function incrementDepartmentCurrentQueueNumber(departmentID){
  Given DepartmentID,
  updates the department's current active session
  return user's current queue number
-*/
- async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
+ */
+async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOneAndUpdate(
         {'_id': departmentID },
         {$inc: {'totalActiveRequests' : 1}
-    });
+        });
     //console.log(result);
     // if (result.value == null){
     //     return null;
@@ -291,66 +291,66 @@ async function incrementDepartmentCurrentQueueNumber(departmentID){
     return result.value.totalActiveRequests;
 }
                       
-                      
+
 /**
-Given Agent JID and DepartmentID
-updates the fieldset for department and Agent to indicate queue availability and Logging
-Agent :
-        1. currentActiveSession -1
-        2. servicedToday +1
-Department :
-        1. currentQueueNumber +1
-        2. servicedToday +1
+ Given Agent JID and DepartmentID
+ updates the fieldset for department and Agent to indicate queue availability and Logging
+ Agent :
+ 1. currentActiveSession -1
+ 2. servicedToday +1
+ Department :
+ 1. currentQueueNumber +1
+ 2. servicedToday +1
  */
 async function completedARequest(jid, departmentID){
-                      let JSONObj = await client.db(dbName).collection('Agent').findOne(
-                                                                                        {'jid' : jid},
-                                                                                        {projection : {
-                                                                                                        'currentActiveSessions' : 1
-                                                                                        }});
-                      if (JSONObj == null) {
-                          console.log("Wrong JID input");
-                          return false;
+    let JSONObj = await client.db(dbName).collection('Agent').findOne(
+        {'jid' : jid},
+        {projection : {
+                'currentActiveSessions' : 1
+            }});
+    if (JSONObj == null) {
+        console.log("Wrong JID input");
+        return false;
 
-                      }
-                      if (JSONObj.currentActiveSessions > 0) {
-                      // decrement currentActiveSessions by 1
-                      // increment servicedToday by 1
-                      await client.db(dbName).collection('Agent').updateOne(
-                                                                            {'jid' : jid},
-                                                                            {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
-                      }
+    }
+    if (JSONObj.currentActiveSessions > 0) {
+        // decrement currentActiveSessions by 1
+        // increment servicedToday by 1
+        await client.db(dbName).collection('Agent').updateOne(
+            {'jid' : jid},
+            {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
+    }
 
-                      else { // means that <= 0
-                      console.log("ERROR : Current Active Session is = 0");
+    else { // means that <= 0
+        console.log("ERROR : Current Active Session is = 0");
 
-                      }
+    }
 
                       
-                      await client.db(dbName).collection('Department').updateOne(
-                                                                                 {'_id' : departmentID},
-                                                                                 {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
-                                                                                 function(err, res) {
-                                                                                 if (err) throw err;
-                                                                                 });
-                        return true;
+    await client.db(dbName).collection('Department').updateOne(
+        {'_id' : departmentID},
+        {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
+        function(err, res) {
+            if (err) throw err;
+        });
+    return true;
 }
 
 // hard resets all department fields.
 async function reset(){
-                      await client.db(dbName).collection('Department').updateMany({},
-                                                                                  {$set: {
-                                                                                  'currentQueueNumber' : 0,
-                                                                                  'totalActiveRequests' : 0,
-                                                                                  'servicedRequests' : 0,
-                                                                                  'failedRequests' : 0,
-                                                                                  'servicedToday' : 0
-                                                                                  }})
-                     await client.db(dbName).collection('Agent').updateMany({},
-                                                                            {$set: {
-                                                                            'currentActiveSessions' : 0,
-                                                                            'servicedToday' : 0
-                                                                            }})
+    await client.db(dbName).collection('Department').updateMany({},
+        {$set: {
+                'currentQueueNumber' : 0,
+                'totalActiveRequests' : 0,
+                'servicedRequests' : 0,
+                'failedRequests' : 0,
+                'servicedToday' : 0
+            }})
+    await client.db(dbName).collection('Agent').updateMany({},
+        {$set: {
+                'currentActiveSessions' : 0,
+                'servicedToday' : 0
+            }})
 }
                       
 
