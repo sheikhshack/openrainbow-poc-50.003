@@ -292,8 +292,8 @@ async function completedARequest(jid, departmentID){
                                                                             {'jid' : jid},
                                                                             {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
                       }
-                      else {
-                      console.log("ERROR : Current Active Session is not <= 0")
+                      else { // means that <= 0
+                      console.log("ERROR : Current Active Session is = 0")
                       }
                       
                       
