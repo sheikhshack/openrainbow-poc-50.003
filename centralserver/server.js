@@ -107,7 +107,10 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let department = req.body.department;
             let communication = req.body.communication;
             let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
-            console.log(queueNumber);
+            if (queueNumber == null)
+            {
+                return res.status(400).send('Current department does not exist');
+            }
 
             // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
             let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
@@ -139,10 +142,10 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 servicedTodayArr.push(listOfAgents[i].servicedToday)
              }
              console.log("sadfasdf")
-             console.log(servicedTodayArr)
-             var count = 0
-             if (listOfAgents.length > 1) {
-                 console.log("listOfAgents.length > 1")
+             console.log(servicedTodayArr);
+             var count = 0;
+             if (listOfAgents.length > 1) {createguest
+                 console.log("listOfAgents.length > 1");
                  for (var i = 0; i < listOfAgents.length; i++) {
                     if (i != listOfAgents.length-1) {
                         // check for the case when ServicedToday is all the same
@@ -155,7 +158,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                  console.log("This is the count")
                  console.log(count)
                  if (count == servicedTodayArr.length-1){
-                    var assignedAgentIndex = queueNumber % listOfAgents.length
+                    var assignedAgentIndex = (queueNumber) % listOfAgents.length
                     console.log("sdayfgakhsjdfksd")
                     console.log(assignedAgentIndex)
                      if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
@@ -163,7 +166,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                         await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
                         return res.send({
                                      queueNumber: queueNumber,
-                                     jid: listOfAgents[assignedAgentIndex].jid
+                                     jid: listOfAgents[assignedAgentIndex].jid,
+                                     queueStatus: "ready"
                                      })
                      }
                  }
@@ -180,7 +184,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 // sends the JID, queueNumber also sent for Debugging
                 return res.send({
                     queueNumber: queueNumber,
-                    jid: listOfAgents[0].jid
+                    jid: listOfAgents[0].jid,
+                    queueStatus: "ready"
                 });
             }
             // this suggests that all candidate agents are busy or not available for this scenario. In this case,
@@ -191,7 +196,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 // requested by reposted under a new method that employs a loop of some sort (every 3s)
                 return res.send({
                     queueNumber: queueNumber,
-                    jid: null
+                    jid: null,
+                    queueStatus: "enqueued"
                 });
 
             }
@@ -206,8 +212,8 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let communication = req.body.communication;
             let queueNumber = req.body.queueNumber;
                  
-                 console.log("This is my Department");
-                 console.log(department);
+             console.log("This is my Department");
+             console.log(department);
             console.log("This is my queue Number");
             console.log(queueNumber);
 
@@ -278,14 +284,21 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
             let jidOfAgent = req.body.jid;
 
             // ok so first step is to update agent details
-            await swaggyDatabase.completedARequest(jidOfAgent, department);
+            let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department);
             // thats it if it works
             return res.send({
-                status: "Success",
-                jid: null
+                    status: "Success",
+                });
 
-            });
+
+
         }));
+
+    app.listen(3008, () =>
+        app.get('/superuserresetdatabase', async (req, res) => {
+            console.log("reset initiated");
+            await swaggyDatabase.reset();
+        }))
 
 
 
