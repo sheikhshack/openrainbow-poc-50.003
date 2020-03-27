@@ -2,7 +2,7 @@ const {MongoClient} = require('mongodb');
 
 // TEST Queue Management Functions
 
-describe('TEST: Agent Collection', () => {
+describe('TEST: QUEUE MANAGEMENT', () => {
          let connection;
          let db;
          
