@@ -22,6 +22,7 @@ client.connect( function(err, client) {
                     //dateFromObjectId("5e6861395e3ea10db6e2fa51")
                     //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
+
                     reset();
 });
 
@@ -48,7 +49,7 @@ async function dateFromObjectId(objectId) {
     checkAvail("Graduate Office","Chat")
  */
 // Function tested for CATA testing
- async function checkRequestedAgents(departmentID, communication) {
+async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
                   let result = await client.db(dbName).collection('Agent').find({
                       'availability': true,
@@ -58,7 +59,6 @@ async function dateFromObjectId(objectId) {
                   //console.log("This is the requested Agents")
                 //console.log(result)
                   return result;
-
              }
 
 
@@ -91,10 +91,9 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
      ---------------------------------------------------------
      modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
  */
-async function modifyCommAndDept(typeOfComm, Department_id, newProperties) {
-    let oldProperties = {'typeOfComm' : typeOfComm , 'Department_id' : Department_id}
+async function modifyCommAndDept(jid, newProperties) {
     await client.db(dbName).collection('Agent').updateOne(
-                                                          oldProperties,
+                                                          {'jid' : jid},
                                                           {$set: newProperties},
                                                           function(err, res) {
                                                           if (err) throw err;
@@ -246,7 +245,11 @@ async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
 -----------------------------------------------------------------------------
 */
 // The following set of functions are for queue management
-
+                      
+                      
+/**
+ Given DepartmentID, returns Department Current Queue Number
+ */
 async function getDepartmentCurrentQueueNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOne({
         '_id' : departmentID
@@ -257,24 +260,30 @@ async function getDepartmentCurrentQueueNumber(departmentID){
     return result.currentQueueNumber;
 }
 
+                      
+/**
+Given DepartmentID, increase that department's current queue number
+*/
 async function incrementDepartmentCurrentQueueNumber(departmentID){
     await client.db(dbName).collection('Department').updateOne(
         {'_id' : departmentID},
         {$inc: {'servicedRequests' : 1, 'currentQueueNumber': 1}},
         function(err, res) {
             if (err) throw err;
-
         })
 }
 
-// updates the department's current active session
-// return user's current queue number
-async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
+/**
+ Given DepartmentID,
+ updates the department's current active session
+ return user's current queue number
+*/
+ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOneAndUpdate(
         {'_id': departmentID },
         {$inc: {'totalActiveRequests' : 1}
     });
-    console.log(result);
+    //console.log(result);
     // if (result.value == null){
     //     return null;
     // }
@@ -283,8 +292,16 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
 }
                       
                       
-                      
-// updates the fieldset for department and Agent to indicate queue availability and Logging
+/**
+Given Agent JID and DepartmentID
+updates the fieldset for department and Agent to indicate queue availability and Logging
+Agent :
+        1. currentActiveSession -1
+        2. servicedToday +1
+Department :
+        1. currentQueueNumber +1
+        2. servicedToday +1
+ */
 async function completedARequest(jid, departmentID){
                       let JSONObj = await client.db(dbName).collection('Agent').findOne(
                                                                                         {'jid' : jid},
@@ -303,8 +320,9 @@ async function completedARequest(jid, departmentID){
                                                                             {'jid' : jid},
                                                                             {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
                       }
-                      else {
-                      console.log("ERROR : Current Active Session is not <= 0");
+
+                      else { // means that <= 0
+                      console.log("ERROR : Current Active Session is = 0");
 
                       }
 
@@ -319,7 +337,7 @@ async function completedARequest(jid, departmentID){
 }
 
 // hard resets all department fields.
-async function reset() {
+async function reset(){
                       await client.db(dbName).collection('Department').updateMany({},
                                                                                   {$set: {
                                                                                   'currentQueueNumber' : 0,
