@@ -1,14 +1,18 @@
-
-// this script attempts to emulate the behavior of a webApp. Once WebApp is ready we can deploy the same flow :)
-
+// module imports
 let rainbowMotherload = require('./rainbowShake');
 let swaggyDatabase = require('./mongoclient');
-var express = require('express');
-const clientSDK = require('rainbow-node-sdk');
-const clientProperties = require('./clientCredentials');
+// external libraries to keep things moving
+const express = require('express');
 const cors = require('cors');
+const https = require('https');
+const fs = require('fs');
+
 const app = express();
-// Initialises cors policy for app
+let optionsForSSL = {
+    key: fs.readFileSync('./certifications/key.pem'),
+    cert: fs.readFileSync('./certifications/cert.pem')
+};
+// Initialises add-ons that app is using
 app.use(cors());
 app.use(express.json());
 
@@ -266,9 +270,7 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
                 position: queueNumber - currentlyServing
             })
         }
-
     });
-
 
     app.post('/endChatInstance', async(req, res) => {
         // requires these 3 params
@@ -290,7 +292,6 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
         return res.send({
                 status: "Success",
             });
-
     });
 
     app.get('/superuserresetdatabase', async () => {
@@ -299,8 +300,10 @@ rainbowMotherload.overlord.events.on('rainbow_onready',async function(){
     });
 
 
-    app.listen(3000, () => {
-            console.log(`Server is running on port '3000'`);
+    // Proceeds to launch the server with SSL enabled @ port: 3000
+    let server = https.createServer(optionsForSSL, app);
+    server.listen(3000, () => {
+            console.log('Server is running on port 3000');
         });
 
 });
