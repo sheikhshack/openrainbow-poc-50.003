@@ -1,7 +1,7 @@
 // this is a testbed to understand the node SDK better. Commented are some functions wherever necessary
 
 const NodeSDK = require("rainbow-node-sdk");
-const adminCredentials = require("./adminCredentials");
+const adminCredentials = require("./reference jsons/adminCredentials");
 
 let rainbowSDK = new NodeSDK(adminCredentials);
 

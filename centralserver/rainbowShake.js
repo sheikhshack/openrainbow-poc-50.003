@@ -3,7 +3,7 @@
 // initialises the module
 const NodeSDK = require("rainbow-node-sdk");
 var onlineStatus;
-const adminCredentials = require("./adminCredentials");
+const adminCredentials = require("./reference jsons/adminCredentials");
 const rainbowSDK = new NodeSDK(adminCredentials);
 rainbowSDK.start();
 
