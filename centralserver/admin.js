@@ -4,6 +4,8 @@ const AdminBroMongoose = require('admin-bro-mongoose');
 
 const User = require('./mongoosemigrations/models/userschema.js');
 
+
+
 AdminBro.registerAdapter(AdminBroMongoose);
 const adminBro = new AdminBro({
     rootPath: '/admin',
@@ -15,6 +17,11 @@ const adminBro = new AdminBro({
             }
         }
     ],
+    branding: {
+        companyName: "Swaggy Inc. ",
+        softwareBrothers: false,
+
+    }
 });
 
 module.exports = adminRouter = AdminBroExpress.buildRouter(adminBro);
