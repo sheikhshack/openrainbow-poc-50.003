@@ -42,8 +42,15 @@ app.get('/', function (req,res) {
 mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/sutdproject?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })
     .then(() => {
         console.log('🔥Mongoose Connected...');
+
+        // uncomment for heroku
+        // let port = process.env.PORT || 8080;
+        // app.listen(port, () => {
+        //  console.log('Server is running on port ' + port);
+        //   });
+        
         let server = https.createServer(optionsForSSL, app);
-        server.listen(3000, () => {
+        server.listen( '3000', () => {
             console.log('Server is running on port 3000');
         });
 

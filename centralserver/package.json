@@ -12,7 +12,10 @@
     "jest-environment-node": "^25.2.1",
     "mongodb": "^3.5.4",
     "mongoose": "^5.9.7",
-    "rainbow-node-sdk": "^1.68.0"
+    "rainbow-node-sdk": "^1.68.0",
+    "@shelf/jest-mongodb": "^1.1.5",
+    "cors": "^2.8.5",
+    "mongodb-memory-server": "^6.5.0"
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^1.1.5",
