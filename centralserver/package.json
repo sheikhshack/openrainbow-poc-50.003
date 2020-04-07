@@ -11,7 +11,8 @@
     "jest-environment-node": "^25.2.1",
     "mongodb": "^3.5.4",
     "mongoose": "^5.9.7",
-    "rainbow-node-sdk": "^1.68.0"
+    "rainbow-node-sdk": "^1.68.0",
+    "set-interval-async": "1.0.32"
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^1.1.5",

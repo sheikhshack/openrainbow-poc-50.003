@@ -35,7 +35,7 @@ app.use('/extras', extrasAPI);
 
 mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/test?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })
     .then(() => {
-        console.log('🔥Mongoose Connected...');
+        console.log('Mongoose Connected...');
         let server = https.createServer(optionsForSSL, app);
         server.listen(3000, () => {
             console.log('Server is running on port 3000');
@@ -44,9 +44,3 @@ mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb
 
     })
     .catch(err => console.log(err));
-
-
-
-
-
-
