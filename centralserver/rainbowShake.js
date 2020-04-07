@@ -58,6 +58,7 @@ async function createGuestWithName(name, ticketID){
     }
 }
 
+
 async function checkOnlineStatus(id){
     // uses the presence api
     let result = await rainbowSDK.contacts.getContactByJid(id);
