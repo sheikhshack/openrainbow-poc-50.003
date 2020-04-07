@@ -31,9 +31,15 @@ app.use('/routing', agentRoutingRoutesAPI);
 app.use('/superadmin', superadminAPI);
 app.use('/extras', extrasAPI);
 
+
+// redirecting index page to new polished admin page
+app.get('/', function (req,res) {
+     res.redirect('/admin');
+});
+
 // runs mongoose async
 
-mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/test?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })
+mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/sutdproject?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })
     .then(() => {
         console.log('🔥Mongoose Connected...');
         let server = https.createServer(optionsForSSL, app);
