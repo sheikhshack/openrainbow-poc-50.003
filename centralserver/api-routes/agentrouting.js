@@ -5,6 +5,13 @@ const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
+const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
+
+
+const INTERVAL_MS = 1000
+const EXECUTION_TIME_MS = 500
+const EXAMPLE_DURATION_SEC = 10
+
 
 router.get('/createguest', async (req, res) => {
     let loginCreds = await rainbowMotherload.createGuests(10800);
@@ -15,6 +22,7 @@ router.get('/createguest', async (req, res) => {
     });
 });
 
+
 router.get('/createguestdynamic', async (req, res) => {
     let nameIntended = req.query.name;
     let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #00001");
@@ -24,6 +32,147 @@ router.get('/createguestdynamic', async (req, res) => {
 
     });
 });
+
+router.get('/getClientReq', async(req,res) => {
+  let updateOperator = 'add';
+  let client =  req.body.name;
+  let department = req.body.department;
+  let communication = req.body.communication;
+  let problem = req.body.problem;
+  let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
+  // populate the relevant queues accordingly
+  await swaggyDatabase.updateClientQ(department, communication, updateOperator, client, queueNumber);
+});
+
+// The queue array only updates when a updateClientQ is made.
+// so in theory, we can create a get method to checks for the status of the Q
+// after each updateClientQ method call
+// everytime client requests for a agent, we check add him to the Queue.
+// and we check if for the next client to be chosen.
+
+// what if every time the array changes : we run the code?
+// which means that updateClientQ is made.
+
+router.post('/monitorClientQ' , async(req, res) => {
+  var videoRdy = true, audioRdy = true;
+  var chatCount = 0, audioCount = 0, videoCount = 0;
+  var audioRdyCount = 0 , videoRdyCount = 0;
+  var chatQ, audioQ, videoQ;
+  var selectedClient;
+  var updateOperator = "remove";
+
+  setIntervalAsync(
+    async () => {
+      console.log('Start checkClientQ function')
+      var clientQ = await swaggyDatabase.checkClientQ("Graduate Office");
+      chatQ = clientQ.Chat;
+      audioQ = clientQ.Audio;
+      videoQ = clientQ.Video;
+
+      if (chatQ.length!= 0 && chatCount !=0) {
+        // assign video request
+        if (videoQ.length != 0 && videoRdy) {
+          if (chatCount % 3 == 0) {
+            videoCount ++;
+            videoRdy = false; // reset after 3 chats req have been served.
+            // select index 0 of the Qtypes.
+            // then update the Q
+            selectedClient = videoQ.splice(0,1);
+            await swaggyDatabase.updateClientQ(selectedClient.department, "Video", updateOperator, selectedClient.name, selectedClient.queueNumber);
+          }
+        }
+
+        // assign audio request
+        if (audioQ.length != 0) {
+          if (chatCount % 2 == 0 && audioRdy) {
+            audioCount ++;
+            audioRdy = false; // reset after 2 chats req have been served.
+            selectedClient = audioQ.splice(0,1);
+            await swaggyDatabase.updateClientQ(selectedClient.department, "Audio", updateOperator, selectedClient.name, selectedClient.queueNumber);
+          }
+        }
+      }
+      // assign chat request
+      if (chatQ.length != 0) {
+        chatCount ++;
+        selectedClient = chatQ.splice(0,1);
+        await swaggyDatabase.updateClientQ(selectedClient.department, "Chat", updateOperator, selectedClient.name, selectedClient.queueNumber);
+        if (audioCount > 0) {
+          audioRdyCount ++;
+        }
+        if (videoCount > 0) {
+          videoRdyCount ++;
+        }
+
+        if (!audioRdy && audioRdyCount == 2) {
+          audioRdy = true;
+          audioRdyCount = 0;
+        }
+
+        if (!videoRdy && videoRdyCount == 3) {
+          videoRdy = true;
+          videoRdyCount = 0;
+        }
+      }
+      console.log("This is the selected client!")
+      console.log(selectedClient);
+      console.log('End of checkClientQ router method.')
+
+    },
+    INTERVAL_MS
+  )
+})
+
+
+
+// continually check for the populated queues
+// rest APIs that run forever
+// $setInterval(async function() => {
+  // while(true) {
+  //   if (chatQ!= 0 && chatCount !=0) {
+  //     // assign video request
+  //     if (videoQ != 0 && videoRdy) {
+  //       if (chatCount % 3 == 0) {
+  //         // pick this video client.
+  //         videoCount ++;
+  //         videoRdy = false; // reset after 3 chats req have been served.
+  //         continue;
+  //       }
+  //     }
+  //
+  //     // assign audio request
+  //     if (audioQ != 0) {
+  //       if (chatCount % 2 == 0 && audioRdy) {
+  //         audioCount ++;
+  //         audioRdy = false; // reset after 2 chats req have been served.
+  //         continue;
+  //       }
+  //     }
+  //   }
+  //   // assign chat request
+  //   if (chatQ != 0) {
+  //
+  //     chatCount ++;
+  //     if (audioCount > 0) {
+  //       audioRdyCount ++;
+  //     }
+  //     if (videoCount > 0) {
+  //       videoRdyCount ++;
+  //     }
+  //
+  //     if (!audioRdy && audioRdyCount == 2) {
+  //       audioRdy = true;
+  //       audioRdyCount = 0;
+  //     }
+  //
+  //     if (!videoRdy && videoRdyCount == 3) {
+  //       videoRdy = true;
+  //       videoRdyCount = 0;
+  //     }
+  //   }
+  // }
+// })
+
 
 router.post('/getRequiredCSA', async(req, res) => {
     let department = req.body.department;
@@ -62,9 +211,10 @@ router.post('/getRequiredCSA', async(req, res) => {
     for (var i = 0; i< listOfAgents.length; i++) {
         servicedTodayArr.push(listOfAgents[i].servicedToday)
     }
-    console.log("sadfasdf");
     console.log(servicedTodayArr);
     var count = 0;
+
+    // enter this if there are more than 1 agent available.
     if (listOfAgents.length > 1) {
         console.log("listOfAgents.length > 1");
         for (var i = 0; i < listOfAgents.length; i++) {
@@ -82,14 +232,11 @@ router.post('/getRequiredCSA', async(req, res) => {
 
             var assignedAgentIndex = (queueNumber) % listOfAgents.length;
 
-            console.log("sdayfgakhsjdfksd");
             console.log(assignedAgentIndex);
             if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
                 await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
                 await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
                 return res.send({
-
-
                     queueNumber: queueNumber,
                     jid: listOfAgents[assignedAgentIndex].jid,
                     queueStatus: "ready"
@@ -98,9 +245,9 @@ router.post('/getRequiredCSA', async(req, res) => {
             }
         }
     }
-    console.log("This is where im at ");
-    console.log(listOfAgents[0]);
 
+
+    // enter this if there is only 1 agent available
     // final check that the right agent is online and return it to client for immediate connection
     if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
         // update all the agent stuff first

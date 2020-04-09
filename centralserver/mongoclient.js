@@ -1,6 +1,6 @@
 // Setup Express web application
 const bodyParser = require("body-parser");
-
+// const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 
@@ -12,25 +12,44 @@ const dbName = "sutdproject";
 // Create a new MongoClient
 const client = new MongoClient(url,  {useUnifiedTopology: true});
 
+// const INTERVAL_MS = 1000
+// const EXECUTION_TIME_MS = 500
+// const EXAMPLE_DURATION_SEC = 10
+
 // Use connect method to connect to the Server
 client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
-               
+
                     //toggleAvail("testesting")
                     //dateFromObjectId("5e6861395e3ea10db6e2fa51")
                     //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
-
                     reset();
+                    // updateClientQ("Graduate Office", "Chat", "add", "tinkit", 0);
+                    // updateClientQ("Graduate Office", "Chat", "add", "wingkit", 1);
+                    // updateClientQ("Graduate Office", "Chat", "add", "dad", 2);
+                    // updateClientQ("Graduate Office", "Chat", "remove", "tinkit", 0);
+                    console.log("About to run the setIntervalAsync method")
+                    // $setInterval(checkClientQ("Graduate Office"),3000);
+                    // setIntervalAsync(
+                    //   async () => {
+                    //     console.log('Start checkClientQ function')
+                    //     await checkClientQ("Graduate Office");
+                    //     console.log('End of checkClientQ function.')
+                    //   },
+                    //   INTERVAL_MS
+                    // )
+
+
 });
 
 // please ignore this 2 functions. I will keep this as reference.
 async function dateFRomObjectId(date) {
     return Math.floor( date.getTime() / 1000).toString(16) + "0000000000000000"
 }
-                      
+
 async function dateFromObjectId(objectId) {
                       let x = await new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
                       console.log(x)
@@ -102,7 +121,7 @@ async function modifyCommAndDept(jid, newProperties) {
 }
 
 
-             
+
 
 
 
@@ -131,8 +150,8 @@ async function incrementAgentSession(jid) {
         // increment by currentActiveSessions by 1
         let newActiveSession = JSONObj.currentActiveSessions +=1;
         console.log(newActiveSession);
-        
-        
+
+
         await client.db(dbName).collection('Agent').updateOne(
             {'jid' : jid},
             {$set: {'currentActiveSessions' : newActiveSession}},
@@ -203,7 +222,7 @@ async function toggleAvail(jid) {
             console.log("CSA is now available")
         })
 }
-    
+
 
 
 /**
@@ -215,7 +234,7 @@ async function toggleAvail(jid) {
 /**
  Adds Pending Request to PendingRequests Database
  addPendingRequest("tinkitwong@gmail.com", "Graduate Office", "Enquiry")
- 
+
 
  */
 
@@ -226,7 +245,7 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
         'Department_id' : departmentID,
         'Enquiry' : Enquiry,
         'TimeStamp' : String(new Date())
-                                                
+
     }, function(err, res) {
         if (err) throw err;
         console.log("Document inserted")
@@ -244,8 +263,9 @@ async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
  ---------------------- Queue Management -------------------------------------
  -----------------------------------------------------------------------------
  */
-// The following set of functions are for queue management
-                      
+// The following set of functions are for queue management for picking the
+// correct agent
+
 
 /**
  Given DepartmentID, returns Department Current Queue Number
@@ -290,7 +310,7 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
 
     return result.value.totalActiveRequests;
 }
-                      
+
 
 /**
  Given Agent JID and DepartmentID
@@ -326,7 +346,7 @@ async function completedARequest(jid, departmentID){
 
     }
 
-                      
+
     await client.db(dbName).collection('Department').updateOne(
         {'_id' : departmentID},
         {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
@@ -335,6 +355,94 @@ async function completedARequest(jid, departmentID){
         });
     return true;
 }
+
+// The following set of functions are for queue management for picking the
+// correct agent
+
+/*
+Query the department queues that clients are queued into
+and updates the Client Queues dependeding on the updateOperator
+
+UpdateOperator : 'add' || 'remove'
+
+NOTE :
+CURRENTLY THE REMOVE METHOD REMOVES THE FIRST CLIENT THAT WAS ADDDED INTO THE Q.
+THIS MAKES SENSE BECAUSE FIFO POLICY.
+*/
+async function updateClientQ(Department, queue, updateOperator, user, queueNumber){
+  let ChatQ, AudioQ, VideoQ;
+
+
+  let JSONObj = await client.db(dbName).collection('Queues').findOne(
+    {'Department' : Department},
+    {projection: {'Chat' : 1, 'Audio' : 1, 'Video' : 1 }});
+    console.log("Inside the checkQ Function!");
+    if (queue == "Chat") {
+      ChatQ = JSONObj.Chat;
+    }
+    else if (queue == "Audio") {
+      AudioQ = JSONObj.Audio;
+    }
+    else {
+      VideoQ = JSONObj.Video;
+    }
+
+    // add operators
+    if (updateOperator == "add") {
+      if (queue == "Chat") {
+        ChatQ.push({name : user, queueNumber : queueNumber, department: Department});
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : ChatQ}})}
+      else if (queue == "Audio"){
+        AudioQ.push({name : user, queueNumber : queueNumber, department: Department});
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : AudioQ}})}
+      else {
+        VideoQ.push({name : user, queueNumber : queueNumber, department: Department});
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : VideoQ}})}
+    }
+
+      // remove operators
+    else if (updateOperator == "remove"){
+      if (queue == "Chat") {
+        ChatQ.splice(0,1);   // we remove the first user that enters the queue
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : ChatQ}})
+      }
+      else if (queue == "Audio"){
+        ChatQ.splice(0,1);
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : AudioQ}})}
+      else {
+        ChatQ.splice(0,1);
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'Chat' : VideoQ}})}
+    }
+    else { // if updateOperator = null
+       console.log("Please enter a valid updateOperator: 'add' or 'remove'");
+    }
+}
+
+async function checkClientQ(Department){
+  console.log("Inside the checkClienQ method!")
+  let ChatQ, AudioQ, VideoQ;
+  let JSONObj = await client.db(dbName).collection('Queues').findOne(
+    {'Department' : Department},
+    {projection: {'Chat' : 1, 'Audio' : 1, 'Video' : 1 }});
+    console.log(JSONObj);
+  return JSONObj;
+}
+
+
+
+
 
 // hard resets all department fields.
 async function reset(){
@@ -351,11 +459,17 @@ async function reset(){
                 'currentActiveSessions' : 0,
                 'servicedToday' : 0
             }})
+    await client.db(dbName).collection('Queues').updateMany({},
+        {$set: {
+                'Chat' : [],
+                'Audio' : [],
+                'Video' : []
+            }})
 }
-                      
 
-                      
-                      
+
+
+
 
 module.exports = {
     checkRequestedAgents: checkRequestedAgents,
@@ -369,5 +483,7 @@ module.exports = {
     completedARequest: completedARequest,
     toggleAvail : toggleAvail,
     addPendingRequest : addPendingRequest,
+    updateClientQ : updateClientQ,
+    checkClientQ : checkClientQ,
     reset : reset
 };
