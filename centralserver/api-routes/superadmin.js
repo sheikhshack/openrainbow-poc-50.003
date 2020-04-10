@@ -6,9 +6,10 @@ const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
 
-router.get('/superuserresetdatabase', async () => {
+router.get('/superuserresetdatabase', async (req,res) => {
     console.log("reset initiated");
     await swaggyDatabase.reset();
+    return res.send('Hard Reset achieved!')
 });
 
 router.get('/queryAdminContacts', async(req, res) => {

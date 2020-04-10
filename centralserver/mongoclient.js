@@ -26,12 +26,17 @@ client.connect( function(err, client) {
                     //dateFromObjectId("5e6861395e3ea10db6e2fa51")
                     //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
                     // checkAvail("Graduate Office","Chat")
+                    console.log("Starting reset...")
                     reset();
-                    // updateClientQ("Graduate Office", "Chat", "add", "tinkit", 0);
-                    // updateClientQ("Graduate Office", "Chat", "add", "wingkit", 1);
-                    // updateClientQ("Graduate Office", "Chat", "add", "dad", 2);
-                    // updateClientQ("Graduate Office", "Chat", "remove", "tinkit", 0);
-                    console.log("About to run the setIntervalAsync method")
+                    // resetQ();
+                    console.log("System Wide reset has been compeleted")
+
+
+                    // checkClientQ("Graduate Office");
+                    //updateClientQ("Graduate Office", "Chat", "add", "wong kit client", 0);
+
+
+                    //clientPicker("Graduate Office");
                     // $setInterval(checkClientQ("Graduate Office"),3000);
                     // setIntervalAsync(
                     //   async () => {
@@ -165,7 +170,6 @@ async function incrementAgentSession(jid) {
         console.log("Please wait. Current CSA is working at maximum capacity");
         return false;
     }
-
 }
 
 async function checkAgentSession(jid) {
@@ -375,72 +379,231 @@ async function updateClientQ(Department, queue, updateOperator, user, queueNumbe
 
   let JSONObj = await client.db(dbName).collection('Queues').findOne(
     {'Department' : Department},
-    {projection: {'Chat' : 1, 'Audio' : 1, 'Video' : 1 }});
-    console.log("Inside the checkQ Function!");
+    {projection: {'ChatQ' : 1, 'AudioQ' : 1, 'VideoQ' : 1 }});
+    console.log("Inside the updateClientQ Function!");
     if (queue == "Chat") {
-      ChatQ = JSONObj.Chat;
+      ChatQ = JSONObj.ChatQ;
     }
-    else if (queue == "Audio") {
-      AudioQ = JSONObj.Audio;
+    if (queue == "Audio") {
+      AudioQ = JSONObj.AudioQ;
     }
-    else {
-      VideoQ = JSONObj.Video;
+    if (queue == "Video"){
+      VideoQ = JSONObj.VideoQ;
     }
-
+    // if (queue != "Chat" || queue != "Audio" || queue != "Video") {
+    //   console.log("Please enter the correct Queue Type : Chat | Audio | Video")
+    // }
+    console.log("This is the updateClientQ method's JSONObj")
+    console.log(JSONObj)
+    console.log(ChatQ)
     // add operators
     if (updateOperator == "add") {
+      console.log("updaterOperator = add!")
       if (queue == "Chat") {
         ChatQ.push({name : user, queueNumber : queueNumber, department: Department});
+        console.log("This is the new ChatQ!")
+        console.log(ChatQ);
+        console.log("Pushing the new ChatQ to DB")
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : ChatQ}})}
+          {$set: {'ChatQ' : ChatQ}})
+        console.log("Updating chatCount and chatQLength!")
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$inc: {'chatQLength' : 1}})
+        }
       else if (queue == "Audio"){
         AudioQ.push({name : user, queueNumber : queueNumber, department: Department});
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : AudioQ}})}
+          {$set: {'AudioQ' : AudioQ}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$inc: {'audioQLength' : 1}})
+        }
       else {
         VideoQ.push({name : user, queueNumber : queueNumber, department: Department});
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : VideoQ}})}
+          {$set: {'VideoQ' : VideoQ}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$inc: {'videoQLength' : 1}})
+        }
+        console.log("Finished Adding!")
     }
+
 
       // remove operators
     else if (updateOperator == "remove"){
+      console.log("Inside the remove method!")
       if (queue == "Chat") {
         ChatQ.splice(0,1);   // we remove the first user that enters the queue
+        console.log(ChatQ)
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : ChatQ}})
-      }
-      else if (queue == "Audio"){
-        ChatQ.splice(0,1);
+          {$set: {'ChatQ' : ChatQ}})
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : AudioQ}})}
-      else {
-        ChatQ.splice(0,1);
+          {$inc: {'chatQLength' : -1}})}
+      if (queue == "Audio"){
+        AudioQ.splice(0,1);
         await client.db(dbName).collection('Queues').updateOne(
           {'Department' : Department},
-          {$set: {'Chat' : VideoQ}})}
+          {$set: {'AudioQ' : AudioQ}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$inc: {'audioQLength' : -1}})}
+     if (queue == "Video") {
+       console.log("Is my error here?")
+        VideoQ.splice(0,1);
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$set: {'VideoQ' : VideoQ}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {'Department' : Department},
+          {$inc: {'videoQLength' : -1}})}
     }
     else { // if updateOperator = null
        console.log("Please enter a valid updateOperator: 'add' or 'remove'");
     }
 }
 
+/*
+Given a Department :
+Returns the current instance of
+Chat/Audio/Video Queues JSON Object.
+*/
 async function checkClientQ(Department){
-  console.log("Inside the checkClienQ method!")
+  console.log("Inside the checkClientQ method!")
   let ChatQ, AudioQ, VideoQ;
   let JSONObj = await client.db(dbName).collection('Queues').findOne(
     {'Department' : Department},
-    {projection: {'Chat' : 1, 'Audio' : 1, 'Video' : 1 }});
+    {projection: {'ChatQ' : 1, 'AudioQ' : 1, 'VideoQ' : 1 }});
     console.log(JSONObj);
   return JSONObj;
 }
 
+/*
 
+Pre-requisite : Queue must have at least one person
+
+Given Department
+Pick a Client
+
+This will first update the Queue Count, set the boolean as false after
+updateClienQ called to remove the selectedClient (which is the first index of each Q)
+update the selectedClient field
+*/
+
+async function clientPicker(Department) {
+  console.log("Inside Client Picker!")
+  let thisDpt = await client.db(dbName).collection('Queues').findOne(
+    {"Department" : Department});
+  console.log("This is the current instance of thisDpt")
+  console.log(thisDpt)
+  if (thisDpt.chatQLength!= 0 && thisDpt.chatCount !=0) {
+    // assign video request
+    if (thisDpt.videoQLength != 0 && thisDpt.videoRdy) {
+      if (thisDpt.chatCount % 3 == 0) {
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$inc : {'videoCount' : 1}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$set : {'videoRdy' : false}})
+        let selectedClient = thisDpt.ChatQ[0]
+
+        await updateClientQ(selectedClient.department, "Video", "remove", selectedClient.name, selectedClient.queueNumber);
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$set: {'selectedClient' : selectedClient}})
+      }
+    }
+
+    // assign audio request
+    if (thisDpt.audioQLength != 0) {
+      if (thisDpt.chatCount % 2 == 0 && thisDpt.audioRdy) {
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$inc : {'audioCount' : 1}})
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$set : {'audioRdy' : false}})
+        let selectedClient = thisDpt.AudioQ[0]
+        await updateClientQ(selectedClient.department, "Audio", "remove", selectedClient.name, selectedClient.queueNumber);
+      }
+    }
+  }
+  // assign chat request
+  if (thisDpt.chatQLength != 0) {
+    await client.db(dbName).collection('Queues').updateOne(
+      {"Department" : Department},
+      {$inc : {'chatCount' : 1}})
+    let selectedClient = thisDpt.ChatQ[0]
+    console.log("This is the selected Client. It should be : ClientName")
+    console.log(selectedClient)
+    await updateClientQ(selectedClient.department, "Chat", "remove", selectedClient.name, selectedClient.queueNumber);
+    console.log("Finished Updating the ClientQ!")
+    console.log(selectedClient)
+    // how to make sure that I don't overwrite the currently selected Client from the Audio Q ?
+    // i can only update this if the previous selected is already assigned.
+    // if this boolean - Assigned is false : then cannot update the client field
+    // if this boolean - Assigned is true : then can update the client field 
+    // but when can should we make Assigned boolean false?
+
+    await updateSelectedClient(Department, selectedClient);
+    console.log("BACK IN THE CLIENT PICKER!!")
+    // I have to chack the updated instance.
+    let updatedDpt = await client.db(dbName).collection('Queues').findOne(
+      {"Department" : Department});
+    if (updatedDpt.audioCount > 0) {
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$inc : {'audioRdyCount' : 1}})
+    }
+    if (updatedDpt.videoCount > 0) {
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$inc : {'videoRdyCount' : 1}})
+    }
+    if (!updatedDpt.audioRdy && updatedDpt.audioRdyCount == 2) {
+        await client.db(dbName).collection('Queues').updateOne(
+          {"Department" : Department},
+          {$set : {'audioRdy' : true, 'audioRdyCount' : 0}})
+      }
+    if (!updatedDpt.videoRdy && updatedDpt.videoRdyCount == 3) {
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$set : {'videoRdy' : true, 'videoRdyCount' : 0}})
+    }
+  }
+}
+
+async function updateSelectedClient(Department, selectedClient) {
+  console.log("Updating Selected Client field")
+  console.log("This is the selected Client in this method!")
+  console.log(selectedClient);
+  // { name: 'Client 212', queueNumber: 0, department: 'Graduate Office' }
+  console.log(selectedClient.name)
+  console.log(selectedClient.queueNumber)
+  await client.db(dbName).collection('Queues').updateOne(
+    {'Department' : Department},
+    {$set: {'selectedClient' : selectedClient}}
+  )
+  console.log("Finished updating Selected Client field")
+}
+
+async function getSelectedClient(Department) {
+  let selectedClient =  client.db(dbName).collection('Queues').findOne(
+    {'Department' : Department},
+    {projection: {'selectedClient' : 1}})
+  return selectedClient
+}
+
+async function sleep(msec) {
+    return new Promise(resolve => setTimeout(resolve, msec));
+}
 
 
 
@@ -461,10 +624,42 @@ async function reset(){
             }})
     await client.db(dbName).collection('Queues').updateMany({},
         {$set: {
-                'Chat' : [],
-                'Audio' : [],
-                'Video' : []
+                'ChatQ' : [],
+                'AudioQ' : [],
+                'VideoQ' : [],
+                'chatQLength' : 0,
+                'audioQLength' : 0,
+                'videoQLength' : 0,
+                'chatCount' : 0,
+                'audioCount' : 0,
+                'videoCount' : 0,
+                'audioRdyCount' : 0,
+                'videoRdyCount' : 0,
+                'videoRdy' : true,
+                'audioRdy' : true,
+                'selectedClient' : {}
+                // 'selectedClientName' : "",
+                // 'selectedClientQno' : 0
             }})
+}
+
+async function resetQ(){
+  await client.db(dbName).collection('Queues').updateMany({},
+      {$set: {
+              'ChatQ' : [],
+              'AudioQ' : [],
+              'VideoQ' : [],
+              'chatQLength' : 0,
+              'audioQLength' : 0,
+              'videoQLength' : 0,
+              'chatCount' : 0,
+              'audioCount' : 0,
+              'videoCount' : 0,
+              'audioRdyCount' : 0,
+              'videoRdyCount' : 0,
+              'videoRdy' : true,
+              'audioRdy' : true
+          }})
 }
 
 
@@ -485,5 +680,8 @@ module.exports = {
     addPendingRequest : addPendingRequest,
     updateClientQ : updateClientQ,
     checkClientQ : checkClientQ,
+    updateSelectedClient : updateSelectedClient,
+    clientPicker : clientPicker,
+    getSelectedClient : getSelectedClient,
     reset : reset
 };

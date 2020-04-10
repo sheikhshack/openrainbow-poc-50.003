@@ -5,7 +5,7 @@ const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
-const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
+// c  onst { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 
 
 const INTERVAL_MS = 1000
@@ -42,7 +42,17 @@ router.get('/getClientReq', async(req,res) => {
   let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
   // populate the relevant queues accordingly
   await swaggyDatabase.updateClientQ(department, communication, updateOperator, client, queueNumber);
+  return res.send({
+    queueNumber : queueNumber
+  })
 });
+
+router.post('/selectClient', async(req, res) => {
+  let department = req.body.department;
+  await swaggyDatabase.clientPicker(department);
+  let selectedClient = await swaggyDatabase.getSelectedClient(department);
+  res.send({selectedClient : selectedClient})
+})
 
 // The queue array only updates when a updateClientQ is made.
 // so in theory, we can create a get method to checks for the status of the Q
@@ -53,125 +63,77 @@ router.get('/getClientReq', async(req,res) => {
 // what if every time the array changes : we run the code?
 // which means that updateClientQ is made.
 
-router.post('/monitorClientQ' , async(req, res) => {
-  var videoRdy = true, audioRdy = true;
-  var chatCount = 0, audioCount = 0, videoCount = 0;
-  var audioRdyCount = 0 , videoRdyCount = 0;
-  var chatQ, audioQ, videoQ;
-  var selectedClient;
-  var updateOperator = "remove";
-
-  setIntervalAsync(
-    async () => {
-      console.log('Start checkClientQ function')
-      var clientQ = await swaggyDatabase.checkClientQ("Graduate Office");
-      chatQ = clientQ.Chat;
-      audioQ = clientQ.Audio;
-      videoQ = clientQ.Video;
-
-      if (chatQ.length!= 0 && chatCount !=0) {
-        // assign video request
-        if (videoQ.length != 0 && videoRdy) {
-          if (chatCount % 3 == 0) {
-            videoCount ++;
-            videoRdy = false; // reset after 3 chats req have been served.
-            // select index 0 of the Qtypes.
-            // then update the Q
-            selectedClient = videoQ.splice(0,1);
-            await swaggyDatabase.updateClientQ(selectedClient.department, "Video", updateOperator, selectedClient.name, selectedClient.queueNumber);
-          }
-        }
-
-        // assign audio request
-        if (audioQ.length != 0) {
-          if (chatCount % 2 == 0 && audioRdy) {
-            audioCount ++;
-            audioRdy = false; // reset after 2 chats req have been served.
-            selectedClient = audioQ.splice(0,1);
-            await swaggyDatabase.updateClientQ(selectedClient.department, "Audio", updateOperator, selectedClient.name, selectedClient.queueNumber);
-          }
-        }
-      }
-      // assign chat request
-      if (chatQ.length != 0) {
-        chatCount ++;
-        selectedClient = chatQ.splice(0,1);
-        await swaggyDatabase.updateClientQ(selectedClient.department, "Chat", updateOperator, selectedClient.name, selectedClient.queueNumber);
-        if (audioCount > 0) {
-          audioRdyCount ++;
-        }
-        if (videoCount > 0) {
-          videoRdyCount ++;
-        }
-
-        if (!audioRdy && audioRdyCount == 2) {
-          audioRdy = true;
-          audioRdyCount = 0;
-        }
-
-        if (!videoRdy && videoRdyCount == 3) {
-          videoRdy = true;
-          videoRdyCount = 0;
-        }
-      }
-      console.log("This is the selected client!")
-      console.log(selectedClient);
-      console.log('End of checkClientQ router method.')
-
-    },
-    INTERVAL_MS
-  )
-})
-
-
-
-// continually check for the populated queues
-// rest APIs that run forever
-// $setInterval(async function() => {
-  // while(true) {
-  //   if (chatQ!= 0 && chatCount !=0) {
-  //     // assign video request
-  //     if (videoQ != 0 && videoRdy) {
-  //       if (chatCount % 3 == 0) {
-  //         // pick this video client.
-  //         videoCount ++;
-  //         videoRdy = false; // reset after 3 chats req have been served.
-  //         continue;
-  //       }
-  //     }
-  //
-  //     // assign audio request
-  //     if (audioQ != 0) {
-  //       if (chatCount % 2 == 0 && audioRdy) {
-  //         audioCount ++;
-  //         audioRdy = false; // reset after 2 chats req have been served.
-  //         continue;
-  //       }
-  //     }
-  //   }
-  //   // assign chat request
-  //   if (chatQ != 0) {
-  //
-  //     chatCount ++;
-  //     if (audioCount > 0) {
-  //       audioRdyCount ++;
-  //     }
-  //     if (videoCount > 0) {
-  //       videoRdyCount ++;
-  //     }
-  //
-  //     if (!audioRdy && audioRdyCount == 2) {
-  //       audioRdy = true;
-  //       audioRdyCount = 0;
-  //     }
-  //
-  //     if (!videoRdy && videoRdyCount == 3) {
-  //       videoRdy = true;
-  //       videoRdyCount = 0;
-  //     }
-  //   }
-  // }
+// router.post('/monitorClientQ' , async(req, res) => { // put this as a function.
+//   var videoRdy = true, audioRdy = true;
+//   var chatCount = 0, audioCount = 0, videoCount = 0;
+//   var audioRdyCount = 0 , videoRdyCount = 0;
+//   var chatQ, audioQ, videoQ; // This will be the Chat.length.
+//   var selectedClient;
+//   var updateOperator = "remove";
+//
+//   setIntervalAsync(
+//     async () => {
+//       console.log('Start checkClientQ function')
+//       var clientQ = await swaggyDatabase.checkClientQ("Graduate Office");
+//       chatQ = clientQ.Chat;
+//       audioQ = clientQ.Audio;
+//       videoQ = clientQ.Video;
+//
+//       if (chatQ.length!= 0 && chatCount !=0) {
+//         // assign video request
+//         if (videoQ.length != 0 && videoRdy) {
+//           if (chatCount % 3 == 0) {
+//             videoCount ++;
+//             videoRdy = false; // reset after 3 chats req have been served.
+//             // select index 0 of the Qtypes.
+//             // then update the Q
+//             selectedClient = videoQ.splice(0,1);
+//             await swaggyDatabase.updateClientQ(selectedClient.department, "Video", updateOperator, selectedClient.name, selectedClient.queueNumber);
+//             res.send + {} // i have the selected client
+//           }
+//         }
+//
+//         // assign audio request
+//         if (audioQ.length != 0) {
+//           if (chatCount % 2 == 0 && audioRdy) {
+//             audioCount ++;
+//             audioRdy = false; // reset after 2 chats req have been served.
+//             selectedClient = audioQ.splice(0,1);
+//             await swaggyDatabase.updateClientQ(selectedClient.department, "Audio", updateOperator, selectedClient.name, selectedClient.queueNumber);
+//           }
+//         }
+//       }
+//       // assign chat request
+//       if (chatQ.length != 0) {
+//         chatCount ++;
+//         selectedClient = chatQ.splice(0,1);
+//         await swaggyDatabase.updateClientQ(selectedClient.department, "Chat", updateOperator, selectedClient.name, selectedClient.queueNumber);
+//         if (audioCount > 0) {
+//           audioRdyCount ++;
+//         }
+//         if (videoCount > 0) {
+//           videoRdyCount ++;
+//         }
+//
+//         if (!audioRdy && audioRdyCount == 2) {
+//           audioRdy = true;
+//           audioRdyCount = 0;
+//         }
+//
+//         if (!videoRdy && videoRdyCount == 3) {
+//           videoRdy = true;
+//           videoRdyCount = 0;
+//         }
+//       }
+//       console.log("This is the selected client!")
+//       console.log(selectedClient);
+//       console.log('End of checkClientQ router method.')
+//
+//     },
+//     INTERVAL_MS
+//   )
 // })
+
 
 
 router.post('/getRequiredCSA', async(req, res) => {
@@ -264,7 +226,7 @@ router.post('/getRequiredCSA', async(req, res) => {
 
         });
     }
-        // this suggests that all candidate agents are busy or not available for this scenario. In this case,
+    // this suggests that all candidate agents are busy or not available for this scenario. In this case,
     // we commence v1.0 of the queueing algo
     else
     {

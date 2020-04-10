@@ -20,7 +20,6 @@ async function createGuests(talkTime) {
         return {
             "loginID" : result.loginEmail,
             "loginPass" : result.password,
-
         }
 
 
