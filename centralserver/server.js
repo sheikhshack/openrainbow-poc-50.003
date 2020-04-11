@@ -6,6 +6,7 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
+
 const fs = require('fs');
 const mongoose = require('mongoose');
 const admin = require('./admin');
@@ -48,7 +49,7 @@ mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb
         // app.listen(port, () => {
         //  console.log('Server is running on port ' + port);
         //   });
-        
+
         let server = https.createServer(optionsForSSL, app);
         server.listen( '3000', () => {
             console.log('Server is running on port 3000');

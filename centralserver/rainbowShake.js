@@ -80,6 +80,27 @@ async function getConversationDetails(convoID) {
     return convoData;
 
 }
+
+// company id: 5e4046a39f17bb3096c6a23a
+// function to add new people into Rainbow
+// TODO: tinkit testing
+async function registerNewCSAAgent(email, password, firstname, lastname){
+    let contact = await rainbowSDK.admin.createUserInCompany(email, password, firstname, lastname, '5e4046a39f17bb3096c6a23a');
+    console.log(contact);
+    await rainbowSDK.contacts.addToContactsList(contact);
+    return contact
+}
+
+async function terminateExistingCSAAgent(agentEmail){
+    let contact = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
+    await rainbowSDK.admin.deleteUser(contact.id);
+    return ({
+        name: contact.name.value,
+        email: contact.loginEmail,
+        jid: contact._id
+    });
+
+}
         // rainbowSDK.contacts.getContactByLoginEmail(agentEmail).then((queriedUser) => {
         //     if (queriedUser) {
         //
@@ -107,6 +128,8 @@ module.exports = {
     createGuestWithName:createGuestWithName,
     createGuestWithTokenization: createGuestWithTokenization,
     checkOnlineStatus: checkOnlineStatus,
+    registerNewCSAAgent: registerNewCSAAgent,
+    terminateExistingCSAAgent: terminateExistingCSAAgent,
     overlord:rainbowSDK
 };
 

@@ -53,7 +53,8 @@ const adminBro = new AdminBro({
                 loginWelcome: "Damn cancerous. Alcatel should pay us for this shit"
             }}
 
-    }
+    },
+    
 });
 
 // TODO: Login credentials security
