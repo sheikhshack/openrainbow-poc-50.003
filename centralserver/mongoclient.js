@@ -1,6 +1,5 @@
 // Setup Express web application
 const bodyParser = require("body-parser");
-// const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 
@@ -12,42 +11,16 @@ const dbName = "sutdproject";
 // Create a new MongoClient
 const client = new MongoClient(url,  {useUnifiedTopology: true});
 
-// const INTERVAL_MS = 1000
-// const EXECUTION_TIME_MS = 500
-// const EXAMPLE_DURATION_SEC = 10
-
 // Use connect method to connect to the Server
 client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
 
-                    //toggleAvail("testesting")
-                    //dateFromObjectId("5e6861395e3ea10db6e2fa51")
-                    //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
-                    // checkAvail("Graduate Office","Chat")
                     console.log("Starting reset...")
                     reset();
                     // resetQ();
                     console.log("System Wide reset has been compeleted")
-
-
-                    // checkClientQ("Graduate Office");
-                    //updateClientQ("Graduate Office", "Chat", "add", "wong kit client", 0);
-
-
-                    //clientPicker("Graduate Office");
-                    // $setInterval(checkClientQ("Graduate Office"),3000);
-                    // setIntervalAsync(
-                    //   async () => {
-                    //     console.log('Start checkClientQ function')
-                    //     await checkClientQ("Graduate Office");
-                    //     console.log('End of checkClientQ function.')
-                    //   },
-                    //   INTERVAL_MS
-                    // )
-
-
 });
 
 // please ignore this 2 functions. I will keep this as reference.
@@ -68,10 +41,10 @@ async function dateFromObjectId(objectId) {
 */
 
 /**
-    Checks availability of ALL agents of a specific department
-    ------------------------------------
-    checkAvail("Graduate Office","Chat")
- */
+Checks availability of ALL agents of a specific department
+------------------------------------
+checkAvail("Graduate Office","Chat")
+*/
 // Function tested for CATA testing
 async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
@@ -87,11 +60,11 @@ async function checkRequestedAgents(departmentID, communication) {
 
 
 /**
-     Adds new Agent as a new document in collection "Agent"
-     Other fields will be given a default value
-     ------------------------------------------------------------------------------
-     addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
- */
+Adds new Agent as a new document in collection "Agent"
+Other fields will be given a default value
+------------------------------------------------------------------------------
+addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
+*/
 async function addAgent(_id, jid, name, typeOfComm, departmentID){
     await client.db(dbName).collection('Agent').insertOne({
                                                     '_id' : _id,
@@ -109,12 +82,12 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
 }
 
 /**
- Modify 1 CSA Agent propertie(s) identifiable by JID
- let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
- newProperties is a JSON object
- ---------------------------------------------------------
- modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
- */
+Modify 1 CSA Agent propertie(s) identifiable by JID
+let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
+newProperties is a JSON object
+---------------------------------------------------------
+modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
+*/
 async function modifyCommAndDept(jid, newProperties) {
     await client.db(dbName).collection('Agent').updateOne(
         {'jid' : jid},
@@ -126,15 +99,11 @@ async function modifyCommAndDept(jid, newProperties) {
 }
 
 
-
-
-
-
 /*
-    Given CSA's JID, Increment no of sessions
-    --------------------------------
-    IncrementAgentSession("testJID")
- */
+Given CSA's JID, Increment no of sessions
+--------------------------------
+IncrementAgentSession("testJID")
+*/
 /**
  * @return {boolean}
  */
@@ -636,36 +605,6 @@ async function clientPicker(Department) { // introduce another parem that specif
     await updateSelectedClient(Department, selectedClient);
   }
 }
-    // how to make sure that I don't overwrite the currently selected Client from the Audio Q ?
-    // i can only update this if the previous selected is already assigned.
-    // if this boolean - Assigned is false : then cannot update the client field
-    // if this boolean - Assigned is true : then can update the client field
-    // but when can should we make Assigned boolean false?
-  // await updateSelectedClient(Department, selectedClient);
-  // console.log("BACK IN THE CLIENT PICKER!!")
-  // // I have to chack the updated instance.
-  // let updatedDpt = await client.db(dbName).collection('Queues').findOne(
-  //     {"Department" : Department});
-  // if (updatedDpt.audioCount > 0) {
-  //   await client.db(dbName).collection('Queues').updateOne(
-  //     {"Department" : Department},
-  //     {$inc : {'audioRdyCount' : 1}})
-  // }
-  // if (updatedDpt.videoCount > 0) {
-  //   await client.db(dbName).collection('Queues').updateOne(
-  //     {"Department" : Department},
-  //     {$inc : {'videoRdyCount' : 1}})
-  // }
-  // if (!updatedDpt.audioRdy && updatedDpt.audioRdyCount == 2) {
-  //     await client.db(dbName).collection('Queues').updateOne(
-  //       {"Department" : Department},
-  //       {$set : {'audioRdy' : true, 'audioRdyCount' : 0}})
-  //   }
-  // if (!updatedDpt.videoRdy && updatedDpt.videoRdyCount == 3) {
-  //   await client.db(dbName).collection('Queues').updateOne(
-  //     {"Department" : Department},
-  //     {$set : {'videoRdy' : true, 'videoRdyCount' : 0}})
-  // }
 
 
 async function updateSelectedClient(Department, selectedClient) {
@@ -727,8 +666,6 @@ async function reset(){
                 'videoRdy' : true,
                 'audioRdy' : true,
                 'selectedClient' : {}
-                // 'selectedClientName' : "",
-                // 'selectedClientQno' : 0
             }})
 }
 
