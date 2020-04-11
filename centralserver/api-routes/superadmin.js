@@ -13,7 +13,7 @@ router.get('/superuserresetdatabase', async (req,res) => {
 });
 
 router.get('/queryAdminContacts', async(req, res) => {
-    let email = req.query.email;
+    let email = req.body.email;
     let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
     let status = await rainbowMotherload.checkOnlineStatus(listOfContacts.jid);
     console.log(status);

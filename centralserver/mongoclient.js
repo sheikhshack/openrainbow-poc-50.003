@@ -1,6 +1,5 @@
 // Setup Express web application
 const bodyParser = require("body-parser");
-// const { setIntervalAsync, clearIntervalAsync } = require('set-interval-async/dynamic')
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 
@@ -12,42 +11,16 @@ const dbName = "sutdproject";
 // Create a new MongoClient
 const client = new MongoClient(url,  {useUnifiedTopology: true});
 
-// const INTERVAL_MS = 1000
-// const EXECUTION_TIME_MS = 500
-// const EXAMPLE_DURATION_SEC = 10
-
 // Use connect method to connect to the Server
 client.connect( function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
 
-                    //toggleAvail("testesting")
-                    //dateFromObjectId("5e6861395e3ea10db6e2fa51")
-                    //addPendingRequest("request1", "tinkitwong@gmail.com", "Finance Office")
-                    // checkAvail("Graduate Office","Chat")
                     console.log("Starting reset...")
                     reset();
                     // resetQ();
                     console.log("System Wide reset has been compeleted")
-
-
-                    // checkClientQ("Graduate Office");
-                    //updateClientQ("Graduate Office", "Chat", "add", "wong kit client", 0);
-
-
-                    //clientPicker("Graduate Office");
-                    // $setInterval(checkClientQ("Graduate Office"),3000);
-                    // setIntervalAsync(
-                    //   async () => {
-                    //     console.log('Start checkClientQ function')
-                    //     await checkClientQ("Graduate Office");
-                    //     console.log('End of checkClientQ function.')
-                    //   },
-                    //   INTERVAL_MS
-                    // )
-
-
 });
 
 // please ignore this 2 functions. I will keep this as reference.
@@ -68,10 +41,10 @@ async function dateFromObjectId(objectId) {
 */
 
 /**
-    Checks availability of ALL agents of a specific department
-    ------------------------------------
-    checkAvail("Graduate Office","Chat")
- */
+Checks availability of ALL agents of a specific department
+------------------------------------
+checkAvail("Graduate Office","Chat")
+*/
 // Function tested for CATA testing
 async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
@@ -87,11 +60,11 @@ async function checkRequestedAgents(departmentID, communication) {
 
 
 /**
-     Adds new Agent as a new document in collection "Agent"
-     Other fields will be given a default value
-     ------------------------------------------------------------------------------
-     addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
- */
+Adds new Agent as a new document in collection "Agent"
+Other fields will be given a default value
+------------------------------------------------------------------------------
+addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
+*/
 async function addAgent(_id, jid, name, typeOfComm, departmentID){
     await client.db(dbName).collection('Agent').insertOne({
                                                     '_id' : _id,
@@ -109,12 +82,12 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
 }
 
 /**
- Modify 1 CSA Agent propertie(s) identifiable by JID
- let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
- newProperties is a JSON object
- ---------------------------------------------------------
- modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
- */
+Modify 1 CSA Agent propertie(s) identifiable by JID
+let newProperties = {'currentActiveSessions' : 1 , 'availability' : false}
+newProperties is a JSON object
+---------------------------------------------------------
+modifyCommAndDept(['Audio', 'Chat'], '001', newProperties)
+*/
 async function modifyCommAndDept(jid, newProperties) {
     await client.db(dbName).collection('Agent').updateOne(
         {'jid' : jid},
@@ -126,15 +99,11 @@ async function modifyCommAndDept(jid, newProperties) {
 }
 
 
-
-
-
-
 /*
-    Given CSA's JID, Increment no of sessions
-    --------------------------------
-    IncrementAgentSession("testJID")
- */
+Given CSA's JID, Increment no of sessions
+--------------------------------
+IncrementAgentSession("testJID")
+*/
 /**
  * @return {boolean}
  */
@@ -227,6 +196,29 @@ async function toggleAvail(jid) {
         })
 }
 
+/*
+This method checks whether a selected can accept a new chat type.
+*/
+async function isChatRdy(agentJID){
+  let isChatRdy = await client.db(dbName).collection('Agent').findOne(
+    {'jid' : agentJID},
+    {projection: {'isChatRdy' : 1}})
+  return isChatRdy.isChatRdy
+}
+
+async function updateAgentisChatRdyStatus(Department, agentJID, isChatRdy){
+  if (isChatRdy) {
+    await client.db(dbName).collection('Agent').updateOne(
+      {'jid' : agentJID},
+      {$set : {'isChatRdy' : false}})
+  }
+  else if (!isChatRdy) {
+    await client.db(dbName).collection('Agent').updateOne(
+      {'jid' : agentJID},
+      {$set : {'isChatRdy' : true}})
+  }
+}
+
 
 
 /**
@@ -258,10 +250,50 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
 }
 
 
-async function populateDataBaseWithLogs(departmentID, loggingObject, agentJID)
-{
+/**
+ -----------------------------------------------------------------------------
+ --------------------------- Loggings Collection -----------------------------
+ -----------------------------------------------------------------------------
+ */
 
+
+/*
+Given a JSON Chat History (from front end)
+Return repackaged JSON Object for Logging Collection
+*/
+function parseLogs(conversation) {
+  let value;
+  let finalObj = {};
+  for (var i = 0; i< conversation.length; i++) {
+    value = conversation[i].data
+    if (conversation[i].side == "R") {
+      finalObj[i] = {"user" : value}
+    }
+    else if (conversation[i].side == "L") {
+      finalObj[i] = {"agent" : value}
+    }
+  }
+  return finalObj
 }
+
+/*
+Creates a Logging Document
+*/
+async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation)
+{
+  let finalObj = parseLogs(conversation);
+  await client.db(dbName).collection('Logging').insertOne({
+      "Department": department,
+      "ClientEmail": clientEmail,
+      "AgentJID": jidOfAgent,
+      "Status": true,
+      "TimeofLog": String(new Date()),
+      "TypeOfCommunication": communication,
+      "ChatHistory": finalObj,
+      "UpdatedAt": new Date(Date.now()) })
+}
+
+
 /**
  -----------------------------------------------------------------------------
  ---------------------- Queue Management -------------------------------------
@@ -325,23 +357,27 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
  Department :
  1. currentQueueNumber +1
  2. servicedToday +1
+ Logging :
+ 1. Add ticket.
+
  */
-async function completedARequest(jid, departmentID){
+
+ // add loggin ticket.
+async function completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication){
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
-        {'jid' : jid},
+        {'jid' : jidOfAgent},
         {projection : {
                 'currentActiveSessions' : 1
             }});
     if (JSONObj == null) {
         console.log("Wrong JID input");
         return false;
-
     }
     if (JSONObj.currentActiveSessions > 0) {
         // decrement currentActiveSessions by 1
         // increment servicedToday by 1
         await client.db(dbName).collection('Agent').updateOne(
-            {'jid' : jid},
+            {'jid' : jidOfAgent},
             {$inc: {'currentActiveSessions' : -1, 'servicedToday': 1}});
     }
 
@@ -350,13 +386,15 @@ async function completedARequest(jid, departmentID){
 
     }
 
-
     await client.db(dbName).collection('Department').updateOne(
-        {'_id' : departmentID},
+        {'_id' : department},
         {$inc: {'currentQueueNumber' : 1, 'servicedToday': 1}},
         function(err, res) {
             if (err) throw err;
         });
+    console.log("Inside the /endChatInstance")
+    console.log(convoHistory);
+    await populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, convoHistory)
     return true;
 }
 
@@ -489,96 +527,85 @@ async function checkClientQ(Department){
 Pre-requisite : Queue must have at least one person
 
 Given Department
-Pick a Client
+Pick a Client from the different Queues.
 
 This will first update the Queue Count, set the boolean as false after
 updateClienQ called to remove the selectedClient (which is the first index of each Q)
 update the selectedClient field
 */
 
-async function clientPicker(Department) {
+async function clientPicker(Department) { // introduce another parem that specifies the Qtype
+  // how to incorporate qNo. with
   console.log("Inside Client Picker!")
   let thisDpt = await client.db(dbName).collection('Queues').findOne(
     {"Department" : Department});
   console.log("This is the current instance of thisDpt")
   console.log(thisDpt)
-  if (thisDpt.chatQLength!= 0 && thisDpt.chatCount !=0) {
-    // assign video request
-    if (thisDpt.videoQLength != 0 && thisDpt.videoRdy) {
-      if (thisDpt.chatCount % 3 == 0) {
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$inc : {'videoCount' : 1}})
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$set : {'videoRdy' : false}})
-        let selectedClient = thisDpt.ChatQ[0]
-
-        await updateClientQ(selectedClient.department, "Video", "remove", selectedClient.name, selectedClient.queueNumber);
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$set: {'selectedClient' : selectedClient}})
-      }
+  if (thisDpt.videoQLength == thisDpt.audioQLength) {
+    if (thisDpt.videoCount > thisDpt.audioCount && thisDpt.videoRdy) {
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$set: {'videoCount' : 1}})
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$set : {'videoRdy' : false}})
+      selectedClient = thisDpt.VideoQ[0]
+      await updateSelectedClient(Department, selectedClient);
     }
-
-    // assign audio request
-    if (thisDpt.audioQLength != 0) {
-      if (thisDpt.chatCount % 2 == 0 && thisDpt.audioRdy) {
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$inc : {'audioCount' : 1}})
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$set : {'audioRdy' : false}})
-        let selectedClient = thisDpt.AudioQ[0]
-        await updateClientQ(selectedClient.department, "Audio", "remove", selectedClient.name, selectedClient.queueNumber);
-      }
+    else if (thisDpt.audioCount < thisDpt.videoCount && thisDpt.audioRdy) {
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$inc : {'audioCount' : 1}})
+      await client.db(dbName).collection('Queues').updateOne(
+        {"Department" : Department},
+        {$set : {'audioRdy' : false}})
+      selectedClient = thisDpt.AudioQ[0]
+      await updateSelectedClient(Department, selectedClient);
     }
   }
+
+  // assign video request
+  if (thisDpt.chatCount % 3 == 0 && thisDpt.videoRdy && thisDpt.chatCount!=0){
+    await client.db(dbName).collection('Queues').updateOne(
+      {"Department" : Department},
+      {$inc : {'videoCount' : 1}})
+    await client.db(dbName).collection('Queues').updateOne(
+      {"Department" : Department},
+      {$set : {'videoRdy' : false}})
+    selectedClient = thisDpt.VideoQ[0]
+    await updateSelectedClient(Department, selectedClient);
+    await updateClientQ(selectedClient.department, "Video", "remove", selectedClient.name, selectedClient.queueNumber);
+  }
+    // assign audio request
+  else if (thisDpt.chatCount % 2 == 0 && thisDpt.audioRdy && thisDpt.chatCount !=0) {
+    await client.db(dbName).collection('Queues').updateOne(
+      {"Department" : Department},
+      {$inc : {'audioCount' : 1}})
+    await client.db(dbName).collection('Queues').updateOne(
+      {"Department" : Department},
+      {$set : {'audioRdy' : false}})
+    selectedClient = thisDpt.AudioQ[0]
+    console.log("This is the selected Client inside the audio request if loop")
+    console.log(selectedClient);
+    await updateSelectedClient(Department, selectedClient);
+    await updateClientQ(selectedClient.department, "Audio", "remove", selectedClient.name, selectedClient.queueNumber);
+  }
+
   // assign chat request
-  if (thisDpt.chatQLength != 0) {
+  else if (thisDpt.chatQLength != 0) {
     await client.db(dbName).collection('Queues').updateOne(
       {"Department" : Department},
       {$inc : {'chatCount' : 1}})
-    let selectedClient = thisDpt.ChatQ[0]
+    selectedClient = thisDpt.ChatQ[0]
     console.log("This is the selected Client. It should be : ClientName")
     console.log(selectedClient)
     await updateClientQ(selectedClient.department, "Chat", "remove", selectedClient.name, selectedClient.queueNumber);
     console.log("Finished Updating the ClientQ!")
     console.log(selectedClient)
-    // how to make sure that I don't overwrite the currently selected Client from the Audio Q ?
-    // i can only update this if the previous selected is already assigned.
-    // if this boolean - Assigned is false : then cannot update the client field
-    // if this boolean - Assigned is true : then can update the client field 
-    // but when can should we make Assigned boolean false?
-
     await updateSelectedClient(Department, selectedClient);
-    console.log("BACK IN THE CLIENT PICKER!!")
-    // I have to chack the updated instance.
-    let updatedDpt = await client.db(dbName).collection('Queues').findOne(
-      {"Department" : Department});
-    if (updatedDpt.audioCount > 0) {
-      await client.db(dbName).collection('Queues').updateOne(
-        {"Department" : Department},
-        {$inc : {'audioRdyCount' : 1}})
-    }
-    if (updatedDpt.videoCount > 0) {
-      await client.db(dbName).collection('Queues').updateOne(
-        {"Department" : Department},
-        {$inc : {'videoRdyCount' : 1}})
-    }
-    if (!updatedDpt.audioRdy && updatedDpt.audioRdyCount == 2) {
-        await client.db(dbName).collection('Queues').updateOne(
-          {"Department" : Department},
-          {$set : {'audioRdy' : true, 'audioRdyCount' : 0}})
-      }
-    if (!updatedDpt.videoRdy && updatedDpt.videoRdyCount == 3) {
-      await client.db(dbName).collection('Queues').updateOne(
-        {"Department" : Department},
-        {$set : {'videoRdy' : true, 'videoRdyCount' : 0}})
-    }
   }
 }
+
 
 async function updateSelectedClient(Department, selectedClient) {
   console.log("Updating Selected Client field")
@@ -620,7 +647,8 @@ async function reset(){
     await client.db(dbName).collection('Agent').updateMany({},
         {$set: {
                 'currentActiveSessions' : 0,
-                'servicedToday' : 0
+                'servicedToday' : 0,
+                'isChatRdy' : true
             }})
     await client.db(dbName).collection('Queues').updateMany({},
         {$set: {
@@ -638,28 +666,7 @@ async function reset(){
                 'videoRdy' : true,
                 'audioRdy' : true,
                 'selectedClient' : {}
-                // 'selectedClientName' : "",
-                // 'selectedClientQno' : 0
             }})
-}
-
-async function resetQ(){
-  await client.db(dbName).collection('Queues').updateMany({},
-      {$set: {
-              'ChatQ' : [],
-              'AudioQ' : [],
-              'VideoQ' : [],
-              'chatQLength' : 0,
-              'audioQLength' : 0,
-              'videoQLength' : 0,
-              'chatCount' : 0,
-              'audioCount' : 0,
-              'videoCount' : 0,
-              'audioRdyCount' : 0,
-              'videoRdyCount' : 0,
-              'videoRdy' : true,
-              'audioRdy' : true
-          }})
 }
 
 
@@ -683,5 +690,7 @@ module.exports = {
     updateSelectedClient : updateSelectedClient,
     clientPicker : clientPicker,
     getSelectedClient : getSelectedClient,
+    isChatRdy : isChatRdy,
+    updateAgentisChatRdyStatus : updateAgentisChatRdyStatus,
     reset : reset
 };
