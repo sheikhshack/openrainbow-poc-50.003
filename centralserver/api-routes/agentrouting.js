@@ -57,7 +57,7 @@ router.post('/getRequiredCSA', async(req, res) => {
 
     // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
     let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-    let isChatRdy;
+    let currentlyInRtc;
     console.log("Testing this list of agents for 1 agent online");
     console.log(listOfAgents);
     // by the end of this sequence, you should get a listofagents that are online and not overloaded
@@ -70,10 +70,10 @@ router.post('/getRequiredCSA', async(req, res) => {
         console.log("Checking overLoadedStatus");
         console.log(listOfAgents[i].name);
         console.log(overLoadedStatus);
-        isChatRdy = await swaggyDatabase.isChatRdy(listOfAgents[i].jid);
+        currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid);
         console.log("Checking if Agent can accept another chat")
-        console.log(isChatRdy);
-        if (!onlineStatus || !overLoadedStatus || !isChatRdy){
+        console.log(currentlyInRtc);
+        if (!onlineStatus || !overLoadedStatus || !currentlyInRtc){
             // if not online,
             // if overLoaded, remove.
             // if not currently serving an audio / video
@@ -111,9 +111,9 @@ router.post('/getRequiredCSA', async(req, res) => {
 
             var assignedAgentIndex = (queueNumber) % listOfAgents.length;
 
-            // check clientReq communication & update agent isChatRdy status iif the selected client request is audio / video.
+            // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
             if (communication == "Video" || communication == "Audio") {
-              await swaggyDatabase.updateAgentisChatRdyStatus(department, listOfAgents[assignedAgentIndex].jid, isChatRdy);
+              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
             }
             console.log(assignedAgentIndex);
             if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
@@ -138,9 +138,9 @@ router.post('/getRequiredCSA', async(req, res) => {
         await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
         await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
         // sends the JID, queueNumber also sent for Debugging
-        // check clientReq communication & update agent isChatRdy status iif the selected client request is audio / video.
+        // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
         if (communication == "Video" || communication == "Audio") {
-          await swaggyDatabase.updateAgentisChatRdyStatus(department, listOfAgents[0].jid, isChatRdy);
+          await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
         }
         return res.send({
 
@@ -183,7 +183,7 @@ router.post('/checkQueueStatus', async(req, res) => {
     //console.log(department);
     console.log("This is my queue Number : ", queueNumber);
     //console.log(queueNumber);
-    let isChatRdy;
+    let currentlyInRtc;
     let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
     console.log("The department is now currently serving :", currentlyServing);
 
@@ -200,10 +200,10 @@ router.post('/checkQueueStatus', async(req, res) => {
         for (var i = listOfAgents.length-1; i >= 0; i--){
             let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
             let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
-            isChatRdy = await swaggyDatabase.isChatRdy(listOfAgents[i].jid)
+            currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
             console.log(onlineStatus);
             console.log(overLoadedStatus);
-            if (!onlineStatus || !overLoadedStatus || !isChatRdy){
+            if (!onlineStatus || !overLoadedStatus || !currentlyInRtc){
                 // if not online, they are removed from the array
                 listOfAgents.splice(i, 1);
                 console.log(listOfAgents);
@@ -214,7 +214,7 @@ router.post('/checkQueueStatus', async(req, res) => {
         if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
             // update all the agent stuff first
             if (communication == "Video" || communication == "Audio") {
-              await swaggyDatabase.updateAgentisChatRdyStatus(department, listOfAgents[0].jid, isChatRdy);
+              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
             }
             await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
             // sends the JID, queueNumber also sent for Debugging
@@ -262,9 +262,9 @@ router.post('/endChatInstance', async(req, res) => {
 
     // ok so first step is to update agent details
     let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication);
-    let isChatRdy = await swaggyDatabase.isChatRdy(jidOfAgent);
-    console.log(isChatRdy);
-    await swaggyDatabase.updateAgentisChatRdyStatus(department, jidOfAgent, isChatRdy);
+    let currentlyInRtc = await swaggyDatabase.currentlyInRtc(jidOfAgent);
+    console.log(currentlyInRtc);
+    await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, jidOfAgent, currentlyInRtc);
     //let endedConvo = await rainbowMotherload.getConversationDetails(conversationID);
     console.log("ended convo is: ..... ");
     // console.log(endedConvo);

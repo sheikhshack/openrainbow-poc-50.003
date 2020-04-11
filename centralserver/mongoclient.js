@@ -199,23 +199,23 @@ async function toggleAvail(jid) {
 /*
 This method checks whether a selected can accept a new chat type.
 */
-async function isChatRdy(agentJID){
-  let isChatRdy = await client.db(dbName).collection('Agent').findOne(
+async function currentlyInRtc(agentJID){
+  let currentlyInRtc = await client.db(dbName).collection('Agent').findOne(
     {'jid' : agentJID},
-    {projection: {'isChatRdy' : 1}})
-  return isChatRdy.isChatRdy
+    {projection: {'currentlyInRtc' : 1}})
+  return currentlyInRtc.currentlyInRtc
 }
 
-async function updateAgentisChatRdyStatus(Department, agentJID, isChatRdy){
-  if (isChatRdy) {
+async function updateAgentcurrentlyInRtcStatus(Department, agentJID, currentlyInRtc){
+  if (currentlyInRtc) {
     await client.db(dbName).collection('Agent').updateOne(
       {'jid' : agentJID},
-      {$set : {'isChatRdy' : false}})
+      {$set : {'currentlyInRtc' : false}})
   }
-  else if (!isChatRdy) {
+  else if (!currentlyInRtc) {
     await client.db(dbName).collection('Agent').updateOne(
       {'jid' : agentJID},
-      {$set : {'isChatRdy' : true}})
+      {$set : {'currentlyInRtc' : true}})
   }
 }
 
@@ -648,7 +648,7 @@ async function reset(){
         {$set: {
                 'currentActiveSessions' : 0,
                 'servicedToday' : 0,
-                'isChatRdy' : true
+                'currentlyInRtc' : true
             }})
     await client.db(dbName).collection('Queues').updateMany({},
         {$set: {
@@ -690,7 +690,7 @@ module.exports = {
     updateSelectedClient : updateSelectedClient,
     clientPicker : clientPicker,
     getSelectedClient : getSelectedClient,
-    isChatRdy : isChatRdy,
-    updateAgentisChatRdyStatus : updateAgentisChatRdyStatus,
+    currentlyInRtc : currentlyInRtc,
+    updateAgentcurrentlyInRtcStatus : updateAgentcurrentlyInRtcStatus,
     reset : reset
 };
