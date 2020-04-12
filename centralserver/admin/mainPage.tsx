@@ -2,7 +2,7 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import { Box, H2, H5, H4, Text, Illustration, IllustrationProps, Button } from 'admin-bro'
+import { Box, H2, H5, H4, Text, Illustration, IllustrationProps, Button, Icon} from 'admin-bro'
 import { useTranslation } from 'admin-bro'
 
 
@@ -130,11 +130,11 @@ const Dashboard =  (props) => {
         </Box>
     ))}
 <Box width={[1, 1, 1 / 2]} p="lg">
-    <Card as="a" flex href="https://softwarebrothers.co/blog/">
-        <Box flexShrink={0}><Illustration variant="AdminBroLogo" /></Box>
+    <Card as="a" flex href="https://google.com">
+        <Box flexShrink={0}><Icon icon="Application" size ={32}  /></Box>
         <Box ml="xl">
-        <H4>{translateMessage('checkoutBlog_title')}</H4>
-    <Text>{translateMessage('checkoutBlog_subtitle')}</Text>
+        <H4>Checkout our Client App </H4>
+    <Text>As part of the project, we also have a fully functional Client App. Do check it out!</Text>
     </Box>
     </Card>
     </Box>
@@ -142,8 +142,8 @@ const Dashboard =  (props) => {
     <Card as="a" flex href="https://github.com/SoftwareBrothers/admin-bro/issues">
         <Box flexShrink={0}><Illustration variant="GithubLogo" /></Box>
         <Box ml="xl">
-        <H4>{translateMessage('foundBug_title')}</H4>
-    <Text>{translateMessage('foundBug_subtitle')}</Text>
+        <H4>Visit Our Swaggy Github!</H4>
+    <Text>Our Source code will be fully published as part of the 50.003 course. Please do visit us!</Text>
     </Box>
     </Card>
     </Box>
