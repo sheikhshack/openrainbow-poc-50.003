@@ -648,7 +648,7 @@ async function reset(){
         {$set: {
                 'currentActiveSessions' : 0,
                 'servicedToday' : 0,
-                'currentlyInRtc' : true
+                'currentlyInRtc' : false
             }})
     await client.db(dbName).collection('Queues').updateMany({},
         {$set: {

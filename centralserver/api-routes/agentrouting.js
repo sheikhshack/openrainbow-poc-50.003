@@ -5,6 +5,8 @@ const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
+const routerFunctions = require('./helperfunctions');
+// var _ = require('lodash');
 
 router.get('/createguest', async (req, res) => {
     let loginCreds = await rainbowMotherload.createGuests(10800);
@@ -57,6 +59,8 @@ router.post('/getRequiredCSA', async(req, res) => {
 
     // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
     let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+    // let deepCopylistOfAgents = _.cloneDeep(listOfAgents);
+
     let currentlyInRtc;
     console.log("Testing this list of agents for 1 agent online");
     console.log(listOfAgents);
@@ -71,25 +75,30 @@ router.post('/getRequiredCSA', async(req, res) => {
         console.log(listOfAgents[i].name);
         console.log(overLoadedStatus);
         currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid);
-        console.log("Checking if Agent can accept another chat")
+        console.log("Checking if agent is currentlyInRtc")
         console.log(currentlyInRtc);
-        if (!onlineStatus || !overLoadedStatus || !currentlyInRtc){
-            // if not online,
-            // if overLoaded, remove.
-            // if not currently serving an audio / video
-            //  they are removed from the array
-            listOfAgents.splice(i, 1);
+        if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+        else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
+          // if not online,OR
+          // if overLoaded, remove. OR
+          // if they are currently serving an audio / video
+          // they are removed from the array
+          listOfAgents.splice(i, 1);
         }
     }
+
+
     console.log("printing list of agents");
     console.log(listOfAgents);
-
+    // console.log("printing the deepCopylistOfAgents")
+    // console.log(deepCopylistOfAgents);
     // Load Balancing....
     // check here if servicedToday field is the same for all agents in the current listofAgents
     var servicedTodayArr = [];
     for (var i = 0; i< listOfAgents.length; i++) {
         servicedTodayArr.push(listOfAgents[i].servicedToday)
     }
+    // let servicedTodayArr = routerFunctions.LoadBalancing(listOfAgents);
     console.log(servicedTodayArr);
     var count = 0;
 
@@ -115,6 +124,7 @@ router.post('/getRequiredCSA', async(req, res) => {
             if (communication == "Video" || communication == "Audio") {
               await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
             }
+
             console.log(assignedAgentIndex);
             if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
                 await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
@@ -142,6 +152,7 @@ router.post('/getRequiredCSA', async(req, res) => {
         if (communication == "Video" || communication == "Audio") {
           await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
         }
+
         return res.send({
 
 
@@ -162,19 +173,12 @@ router.post('/getRequiredCSA', async(req, res) => {
             jid: null,
             queueStatus: "enqueued"
         });
-
     }
-
 });
 
-// check communication, checks agents' isCurrentlyServingVideo/Audio.
-// check for the head of the queue if it is also requesting, video: if yes, then dont assign
-// McDonald.
-// each type of queue for chat/video/audio
 
-// selectedClient.queueNumber replaces currentlyServing
 router.post('/checkQueueStatus', async(req, res) => {
-    // basically only need queueNumber if this actually goes well but ofc it doesnt
+
     let department = req.body.department;
     let communication = req.body.communication;
     let queueNumber = req.body.queueNumber;
@@ -186,9 +190,15 @@ router.post('/checkQueueStatus', async(req, res) => {
     let currentlyInRtc;
     let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
     console.log("The department is now currently serving :", currentlyServing);
+    let myturn = queueNumber < currentlyServing;
+    let nextInLine = (queueNumber == (currentlyServing + 1));
 
-    // checks the queueNumber to see if its ready for servicing
-    if (queueNumber < currentlyServing)
+    if (nextInLine && communication == "Chat") {
+      // assign the agent if possible.
+
+    }
+
+    if (myturn)
     {
         console.log(queueNumber);
         console.log(currentlyServing);
@@ -203,16 +213,20 @@ router.post('/checkQueueStatus', async(req, res) => {
             currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
             console.log(onlineStatus);
             console.log(overLoadedStatus);
-            if (!onlineStatus || !overLoadedStatus || !currentlyInRtc){
+            if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+            else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
                 // if not online, they are removed from the array
                 listOfAgents.splice(i, 1);
-                console.log(listOfAgents);
+
             }
         }
+        console.log("this is the list of agents..")
+        console.log(listOfAgents);
 
         // final check that the right agent is online and return it to client for immediate connection
         if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
             // update all the agent stuff first
+            console.log("Am i in here thennnnnn?")
             if (communication == "Video" || communication == "Audio") {
               await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
             }
