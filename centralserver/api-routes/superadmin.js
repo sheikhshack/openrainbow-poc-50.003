@@ -22,4 +22,23 @@ router.get('/queryAdminContacts', async(req, res) => {
     });
 });
 
+router.post('/registerUserOnRainbow', async (req, res) => {
+    let input = req.body;
+    let result = await rainbowMotherload.registerNewCSAAgent(input.email, input.password, input.firstName, input.lastName);
+    return res.send({
+        jid: result.jid_im,
+        status: "success on registration",
+        loginID: input.email,
+        loginPass: input.password
+    })
+});
+
+router.post('/terminateUserOnRainbow', async (req, res) => {
+    let input = req.body;
+    let result = await rainbowMotherload.terminateExistingCSAAgent(input.email);
+    return res.send({
+        status: "Successful",
+        summary: result
+    })
+});
 module.exports = router;

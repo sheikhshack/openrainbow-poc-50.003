@@ -53,7 +53,13 @@ const adminBro = new AdminBro({
                 loginWelcome: "Damn cancerous. Alcatel should pay us for this shit"
             }}
 
+    },
+    dashboard:{
+        component: AdminBro.bundle('./admin/mainPage')
     }
+
+
+
 });
 
 // TODO: Login credentials security
