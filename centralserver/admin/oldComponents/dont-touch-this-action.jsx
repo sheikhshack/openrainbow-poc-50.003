@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { WrapperBox } from 'admin-bro/components'
+import { WrapperBox } from 'admin-bro'
 
 export default class DontTouchThis extends React.Component {
     render() {

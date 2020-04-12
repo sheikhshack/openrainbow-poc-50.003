@@ -1,8 +1,8 @@
 import React from 'react'
 import { ApiClient } from 'admin-bro'
 
-import { WrapperBox, ValueBlock, DashboardHeader, Column, Columns } from 'admin-bro/components'
-import { colors } from 'admin-bro/style'
+import { WrapperBox, ValueBlock, DashboardHeader, Column, Columns } from 'admin-bro'
+import { colors } from 'admin-bro'
 
 export default class DetailedStats extends React.Component {
     componentDidMount() {

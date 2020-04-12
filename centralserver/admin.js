@@ -54,7 +54,12 @@ const adminBro = new AdminBro({
             }}
 
     },
-    
+    dashboard:{
+        component: AdminBro.bundle('./admin/mainPage')
+    }
+
+
+
 });
 
 // TODO: Login credentials security

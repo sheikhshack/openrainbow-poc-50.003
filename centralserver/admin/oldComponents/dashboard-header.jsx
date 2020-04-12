@@ -3,7 +3,7 @@ import {
     AreaChart, Area, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-import { Columns, Column, DashboardHeader, WrapperBox, ValueBlock, StyledButton } from 'admin-bro/components'
+import { Columns, Column, DashboardHeader, WrapperBox, ValueBlock, StyledButton } from 'admin-bro'
 
 const data = [
     { name: 'Page A', uv: 500, pv: 2400, amt: 2400 },

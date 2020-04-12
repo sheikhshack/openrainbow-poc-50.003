@@ -1,8 +1,8 @@
 import React from 'react'
 
 import { ApiClient, ViewHelpers } from 'admin-bro'
-import { Label, Table, Columns, Column, WrapperBox, ValueBlock, StyledButton } from 'admin-bro/components'
-import { colors } from 'admin-bro/style'
+import { Label, Table, Columns, Column, WrapperBox, ValueBlock, StyledButton } from 'admin-bro'
+import { colors } from 'admin-bro'
 
 import DashboardHeader from './dashboard-header'
 import Info from './infoPanel'
@@ -13,7 +13,7 @@ export default class Dashboard extends React.Component {
         this.h = new ViewHelpers()
         this.state = {
             data: {
-                categories: [],
+                categories: ["red"],
                 pagesCount: 0,
                 usersCount: 0,
             }
@@ -44,8 +44,7 @@ export default class Dashboard extends React.Component {
                                     <ValueBlock
                                         value={pagesCount}
                                         icon="fas fa-file"
-                                        color={colors.error}
-                                        href={this.h.listUrl({ resourceId: 'Page' })}
+                                        color="#FF4567"
                                         label="Number of pages"
                                     />
                                 </Column>
@@ -53,8 +52,7 @@ export default class Dashboard extends React.Component {
                                     <ValueBlock
                                         value={usersCount}
                                         icon="fas fa-user"
-                                        color={colors.warning}
-                                        href={this.h.listUrl({ resourceId: 'User' })}
+                                        color="#FF4567"
                                         label="Number of Users"
                                     />
                                 </Column>

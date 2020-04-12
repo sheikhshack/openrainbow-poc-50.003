@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { WrapperBox, StyledButton} from 'admin-bro/components'
+import { WrapperBox, StyledButton} from 'admin-bro'
 
 const Info = (props) => {
     return (
