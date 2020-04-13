@@ -150,6 +150,9 @@ const SomeStats = ({ addNotice }) => {
                                     <Icon icon="ChevronRight"/>
                                 </Button>
                             </InputGroup>
+                            <FormMessage>length must be between 8 and 64 characters, and contain at least 1 lowercase, 1 uppercase, 1 number and 1 special ch</FormMessage>
+                            <br/>
+                            <br/>
                             <br/>
                             <Button type={"submit"}>Generate Agent</Button>
                         </form>
