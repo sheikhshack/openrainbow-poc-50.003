@@ -1,14 +1,20 @@
 // @ts-ignore
 import React from 'react'
 import styled from 'styled-components'
+import {AreaChart, Area, Tooltip, ResponsiveContainer,
+} from 'recharts';
+// @ts-ignore
+import image from 'react-bootstrap/image'
 
-import { Box, H2, H5, H4, Text, Illustration, IllustrationProps, Button, Icon} from 'admin-bro'
+import { Box, H2, H5, H4, Text, InfoBox, InfoBoxProps,Illustration, IllustrationProps, Button, Icon, Table, TableRow, TableCell, TableCaption, TableHead, TableBody, Link, CheckBox} from 'admin-bro'
 import { useTranslation } from 'admin-bro'
+import Image from "react-bootstrap/Image";
 
 
 const pageHeaderHeight = 284
 const pageHeaderPaddingY = 74
 const pageHeaderPaddingX = 250
+
 
 const DashboardHeader = () => {
     const { translateMessage } = useTranslation();
@@ -129,9 +135,63 @@ const Dashboard =  (props) => {
         </Card>
         </Box>
     ))}
+
+<Box width={[1, 1, 1 ]} p="lg">
+    <Card as="a" href="/admin/resources/Log%20Sessions" >
+        <H4>Most Recent Tickets Serviced </H4>
+    <Table flex>
+        <TableHead>
+            <TableRow>
+                <TableCell>
+                    <Link href="#">
+                        Name
+                        <Icon icon="CaretUp" />
+                    </Link>
+                </TableCell>
+                <TableCell>
+                    <Link href="#">
+                        Last
+                        <Icon icon="CaretDown" />
+                    </Link>
+                </TableCell>
+                <TableCell>Surname</TableCell>
+                <TableCell>Gender</TableCell>
+                <TableCell>Age</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+            <TableRow>
+                <TableCell>Value 1</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell>Value 1</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+                <TableCell>Value 2</TableCell>
+            </TableRow>
+        </TableBody>
+    </Table>
+    </Card>
+</Box>
+
+ <Box width={[1, 1, 1 ]} p="lg">
+    <InfoBox title="Add New Agents into Rainbow">
+        <Text>The following will actually add Agents dynamically into the system, including activation of Rainbow Platform</Text>
+        <Text>To create first click</Text>
+        <Button mt="lg"><Icon icon="Add" />Create</Button>
+    </InfoBox>
+
+</Box>
+
+
 <Box width={[1, 1, 1 / 2]} p="lg">
     <Card as="a" flex href="https://google.com">
-        <Box flexShrink={0}><Icon icon="Application" size ={32}  /></Box>
+        <Box flexShrink={0}><Image src="https://i.imgur.com/QgRDTqG.png?1" /></Box>
         <Box ml="xl">
         <H4>Checkout our Client App </H4>
     <Text>As part of the project, we also have a fully functional Client App. Do check it out!</Text>

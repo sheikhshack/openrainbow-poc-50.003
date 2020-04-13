@@ -56,6 +56,17 @@ const adminBro = new AdminBro({
     },
     dashboard:{
         component: AdminBro.bundle('./admin/mainPage')
+    },
+    pages:{
+        customPage:{
+            label: "Custom Page",
+            handler: async (request, response, context) => {
+                return {
+                    text: "I am fetched from the backend"
+                }
+            },
+            component: AdminBro.bundle('./admin/testingComponents/registrationpage')
+        }
     }
 
 
