@@ -16,14 +16,10 @@
     "mongodb": "^3.5.4",
     "mongodb-memory-server": "^6.5.0",
     "mongoose": "^5.9.7",
-<<<<<<< HEAD
-    "rainbow-node-sdk": "^1.68.0"
-=======
     "rainbow-node-sdk": "^1.68.0",
     "react": "^16.13.1",
     "recharts": "^1.8.5",
     "styled-components": "^5.1.0"
->>>>>>> 90b37f99770161d4db357dab0212f4ab0064f068
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^1.1.5",
