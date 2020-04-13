@@ -45,9 +45,9 @@ const DashboardHeader = () => {
     px={['default', 'lg', pageHeaderPaddingX]}
 >
 <Text textAlign="center" color="white">
-        <H2>{translateMessage('welcomeOnBoard_title')}</H2>
+        <H2>Welcome to the Admin Panel!</H2>
     <Text opacity="0.8">
-        {translateMessage('welcomeOnBoard_subtitle')}
+        We have compiled the Basic necessities of every admin of a CSA system. Check out the tabs on the left and bottom
 </Text>
     </Text>
     </Box>
@@ -57,18 +57,18 @@ const DashboardHeader = () => {
 
 const boxes = ({ translateMessage }) => [{
     variant: 'Planet',
-    title: "FUCK ME IF THIS WORKS",
-    subtitle: translateMessage('addingResources_subtitle'),
-    href: 'google.com',
+    title: "Rainbow Powered",
+    subtitle: "Click here to login to your CSA via Rainbow",
+    href: 'https://web-sandbox.openrainbow.com/app/1.69.3/index.html',
 }, {
     variant: 'DocumentCheck',
-    title: translateMessage('customizeResources_title'),
-    subtitle: translateMessage('customizeResources_subtitle'),
+    title: 'Full Ticket Tracking',
+    subtitle: 'We provide amazing tracking systems for tickets. Click here to check it out ...',
     href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-04-customizing-resources.html',
 }, {
     variant: 'DocumentSearch',
-    title: translateMessage('customizeActions_title'),
-    subtitle: translateMessage('customizeActions_subtitle'),
+    title: "Our API Docs",
+    subtitle: 'Powered by Express, we handcrafted our own APIs. See more ...',
     href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-05-actions.html',
 }, {
     variant: 'FlagInCog',
@@ -180,12 +180,13 @@ const Dashboard =  (props) => {
 </Box>
 
  <Box width={[1, 1, 1 ]} p="lg">
+     <Card as="a"  href= 'admin/pages/accountGeneration'>
     <InfoBox title="Add New Agents into Rainbow">
         <Text>The following will actually add Agents dynamically into the system, including activation of Rainbow Platform</Text>
         <Text>To create first click</Text>
-        <Button mt="lg"><Icon icon="Add" />Create</Button>
+        <Button mt="lg" href='admin/pages/accountGeneration'><Icon icon="Add" />Create</Button>
     </InfoBox>
-
+    </Card>
 </Box>
 
 
