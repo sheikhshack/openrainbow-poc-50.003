@@ -64,7 +64,7 @@ const boxes = ({ translateMessage }) => [{
     variant: 'DocumentCheck',
     title: 'Full Ticket Tracking',
     subtitle: 'We provide amazing tracking systems for tickets. Click here to check it out ...',
-    href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-04-customizing-resources.html',
+    href: 'admin/resources/Log%20Sessions',
 }, {
     variant: 'DocumentSearch',
     title: "Our API Docs",
@@ -72,18 +72,18 @@ const boxes = ({ translateMessage }) => [{
     href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-05-actions.html',
 }, {
     variant: 'FlagInCog',
-    title: translateMessage('writeOwnComponents_title'),
-    subtitle: translateMessage('writeOwnComponents_subtitle'),
-    href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-06-writing-react-components.html',
+    title: 'Control Agent Abilities',
+    subtitle: 'Specify/Create/Modify deployed Agents here. Changes happen real-time',
+    href: '/admin/resources/Agent',
 }, {
     variant: 'Folders',
-    title: translateMessage('customDashboard_title'),
-    subtitle: translateMessage('customDashboard_subtitle'),
-    href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-07-custom-dashboard.html',
+    title: 'Adjust Admin Access',
+    subtitle: 'Due to nature of demo, we have kept this option disabled. Contact us for more..',
+    href: '/admin',
 }, {
     variant: 'Astronaut',
-    title: translateMessage('roleBasedAccess_title'),
-    subtitle: translateMessage('roleBasedAccess_subtitle'),
+    title: 'Dialogflow Bots',
+    subtitle: "Control your BOT policy here. We offer fine-grain controls. Fully Rainbow Integrated",
     href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-08-rbac.html',
 }]
 
@@ -138,41 +138,39 @@ const Dashboard =  (props) => {
 
 <Box width={[1, 1, 1 ]} p="lg">
     <Card as="a" href="/admin/resources/Log%20Sessions" >
-        <H4>Most Recent Tickets Serviced </H4>
+        <H4>Missed/Nullified Tickets </H4>
     <Table flex>
         <TableHead>
             <TableRow>
                 <TableCell>
                     <Link href="#">
-                        Name
+                        Client email
                         <Icon icon="CaretUp" />
                     </Link>
                 </TableCell>
                 <TableCell>
                     <Link href="#">
-                        Last
+                        Department Requested
                         <Icon icon="CaretDown" />
                     </Link>
                 </TableCell>
-                <TableCell>Surname</TableCell>
-                <TableCell>Gender</TableCell>
-                <TableCell>Age</TableCell>
+                <TableCell>Type of Communication</TableCell>
+                <TableCell>Time of Log</TableCell>
             </TableRow>
         </TableHead>
         <TableBody>
             <TableRow>
-                <TableCell>Value 1</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
+                <TableCell>recaro8134@gmail.com</TableCell>
+                <TableCell>Graduate Office</TableCell>
+                <TableCell>Chat</TableCell>
+                <TableCell>3/31/2020, 11:12:00 PM</TableCell>
             </TableRow>
             <TableRow>
-                <TableCell>Value 1</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
-                <TableCell>Value 2</TableCell>
+                <TableCell>wombat65@yahoo.com</TableCell>
+                <TableCell>General Enquiry</TableCell>
+                <TableCell>Audio</TableCell>
+                <TableCell>3/31/2020, 1:57:00 AM</TableCell>
+
             </TableRow>
         </TableBody>
     </Table>
@@ -210,15 +208,15 @@ const Dashboard =  (props) => {
     </Box>
     <Box variant="white" boxShadow="card" width={1} m="lg">
         <Text textAlign="center">
-        <Illustration variant="SoftwareBrothersLogo" />
-        <H4>{translateMessage('needMoreSolutions_title')}</H4>
-    <Text>{translateMessage('needMoreSolutions_subtitle')}</Text>
+        <Illustration variant="Rocket" />
+        <H4>Like what you see?</H4>
+    <Text>We utilise many frameworks to make this happen. Contact us below and share with us your feedback! </Text>
     <Text mt="xxl">
     <Button
     as="a"
     size="sm"
     variant="primary"
-    href="https://softwarebrothers.co/services"
+    href="mailto:sheikhsalim@mymail.sutd.edu.sg"
         >
         {translateButton('contactUs')}
 </Button>
