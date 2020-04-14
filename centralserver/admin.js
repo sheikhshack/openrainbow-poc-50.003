@@ -56,6 +56,18 @@ const adminBro = new AdminBro({
     },
     dashboard:{
         component: AdminBro.bundle('./admin/mainPage')
+    },
+    pages:{
+        accountGeneration:{
+            label: "Account Generation",
+            name: "Account Generation",
+            handler: async (request, response, context) => {
+                return {
+                    text: "I am fetched from the backend"
+                }
+            },
+            component: AdminBro.bundle('./admin/testingComponents/registrationpage')
+        }
     }
 
 

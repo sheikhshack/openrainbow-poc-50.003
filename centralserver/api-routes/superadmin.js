@@ -1,5 +1,6 @@
 /*
 The following file describes all api endpoints pertaining to queue/routing mechanisms
+Error handling has been completed
  */
 const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
@@ -9,36 +10,66 @@ const router = express.Router();
 router.get('/superuserresetdatabase', async (req,res) => {
     console.log("reset initiated");
     await swaggyDatabase.reset();
-    res.send('Hard Reset Completed!')
+    res.send({
+        status: "Successful",
+        message: "Hard Reset Completed. Simulated end of day protocol"
+    })
 });
 
 router.get('/queryAdminContacts', async(req, res) => {
     let email = req.query.email;
-    let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
-    let status = await rainbowMotherload.checkOnlineStatus(listOfContacts.jid);
-    console.log(status);
-    return res.send({
-        listOfContacts
-    });
+    try{
+        let listOfContacts = await rainbowMotherload.queryAgentStatus(email);
+        let status = await rainbowMotherload.checkOnlineStatus(listOfContacts.jid);
+        return res.send({
+            listOfContacts
+        });
+    }
+    catch (e) {
+        return res.status(400).json({
+            message: "User not reachable. May be of private status!"
+
+        })
+    }
+
 });
 
 router.post('/registerUserOnRainbow', async (req, res) => {
     let input = req.body;
-    let result = await rainbowMotherload.registerNewCSAAgent(input.email, input.password, input.firstName, input.lastName);
-    return res.send({
-        jid: result.jid_im,
-        status: "success on registration",
-        loginID: input.email,
-        loginPass: input.password
-    })
+    try{
+        let result = await rainbowMotherload.registerNewCSAAgent(input.email, input.password, input.firstName, input.lastName);
+        return res.send({
+            jid: result.jid_im,
+            status: "success on registration",
+            loginID: input.email,
+            loginPass: input.password
+        })
+    }
+    catch (e) {
+        return res.status(e.code).json({
+            message: e.msg,
+            messageDetails: e.error.errorDetails[0].msg
+        })
+
+    }
+
 });
 
 router.post('/terminateUserOnRainbow', async (req, res) => {
     let input = req.body;
-    let result = await rainbowMotherload.terminateExistingCSAAgent(input.email);
-    return res.send({
-        status: "Successful",
-        summary: result
-    })
+    try{
+        let result = await rainbowMotherload.terminateExistingCSAAgent(input.email);
+        return res.send({
+            status: "Successful",
+            summary: result
+        })
+    }
+    catch (e) {
+        return res.status(400).json({
+            message: "User does not exist!"
+
+        })
+    }
+
 });
 module.exports = router;
