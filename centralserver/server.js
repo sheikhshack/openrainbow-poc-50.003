@@ -38,6 +38,23 @@ app.get('/', function (req,res) {
      res.redirect('/admin');
 });
 
+
+// Error handling for invalid paths
+app.use((req,res,next) =>{
+    const error = new Error("Path Not Found - Refer to our API Documentation");
+    error.status = 404;
+    next(error);
+});
+
+app.use((error, req, res, next) =>{
+    res.status(error.status || 500);
+    res.send({
+        error:{
+            message: error.message
+        }
+    })
+});
+
 // runs mongoose async
 
 mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/sutdproject?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })

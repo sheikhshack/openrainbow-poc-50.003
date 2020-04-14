@@ -85,6 +85,7 @@ async function getConversationDetails(convoID) {
 // function to add new people into Rainbow
 // TODO: tinkit testing
 async function registerNewCSAAgent(email, password, firstname, lastname){
+
     let contact = await rainbowSDK.admin.createUserInCompany(email, password, firstname, lastname, '5e4046a39f17bb3096c6a23a');
     console.log(contact);
     await rainbowSDK.contacts.addToContactsList(contact);
@@ -93,6 +94,7 @@ async function registerNewCSAAgent(email, password, firstname, lastname){
 
 async function terminateExistingCSAAgent(agentEmail){
     let contact = await rainbowSDK.contacts.getContactByLoginEmail(agentEmail);
+    console.log(contact);
     await rainbowSDK.admin.deleteUser(contact.id);
     return ({
         name: contact.name.value,
