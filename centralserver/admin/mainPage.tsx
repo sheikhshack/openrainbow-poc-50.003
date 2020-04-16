@@ -45,7 +45,7 @@ const DashboardHeader = () => {
     px={['default', 'lg', pageHeaderPaddingX]}
 >
 <Text textAlign="center" color="white">
-        <H2>Welcome to the Admin Panel!</H2>
+        <H2>Welcome to the Admin Panel !</H2>
     <Text opacity="0.8">
         We have compiled the Basic necessities of every admin of a CSA system. Check out the tabs on the left and bottom
 </Text>
