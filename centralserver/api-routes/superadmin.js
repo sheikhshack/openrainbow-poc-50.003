@@ -72,4 +72,18 @@ router.post('/terminateUserOnRainbow', async (req, res) => {
     }
 
 });
+
+// WARNING!
+// deletes all documents in the collection
+router.post('/cleanUpSelectedCollection', async (req, res) => {
+  let collection = req.body.collection;
+  try {
+    await swaggyDatabase.cleanUp(collection);
+  } catch (e) {
+    return res.status(400).json({
+        message: "Failed to clean collection. Did you enter the right Collection Name?"
+    })
+  }
+})
+
 module.exports = router;

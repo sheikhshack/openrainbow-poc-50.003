@@ -9,43 +9,32 @@ const routerFunctions = require('./helperfunctions');
 
 
 router.get('/createguest', async (req, res) => {
+  try {
     let loginCreds = await rainbowMotherload.createGuests(10800);
     return res.send({
         guestID : loginCreds.loginID,
         guestPass: loginCreds.loginPass
     });
+  } catch (e) {
+      return res.status(400).json({
+          message: "Unable to create guest.."
+      })}
 });
 
 
 router.get('/createguestdynamic', async (req, res) => {
     let nameIntended = req.query.name;
-    let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #00001");
-    return res.send({
-        guestID : loginCreds.loginID,
-        guestPass: loginCreds.loginPass
-    });
+    try {
+      let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #00001");
+      return res.send({
+          guestID : loginCreds.loginID,
+          guestPass: loginCreds.loginPass
+      });
+    } catch (e) {
+        return res.status(400).json({
+            message: "Unable to create dynamic guests.."
+        })}
 });
-//
-// router.get('/getClientReq', async(req,res) => {
-//   let updateOperator = 'add';
-//   let client =  req.body.name;
-//   let department = req.body.department;
-//   let communication = req.body.communication;
-//   let problem = req.body.problem;
-//   let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
-//   // populate the relevant queues accordingly
-//   await swaggyDatabase.updateClientQ(department, communication, updateOperator, client, queueNumber);
-//   return res.send({
-//     queueNumber : queueNumber
-//   })
-// });
-
-// router.post('/selectClient', async(req, res) => {
-//   let department = req.body.department;
-//   await swaggyDatabase.clientPicker(department);
-//   let selectedClient = await swaggyDatabase.getSelectedClient(department);
-//   res.send({selectedClient : selectedClient})
-// })
 
 
 router.post('/getRequiredCSA', async(req, res) => {
@@ -53,137 +42,143 @@ router.post('/getRequiredCSA', async(req, res) => {
     let department = req.body.department;
     let communication = req.body.communication;
     let problem = req.body.problem;
-    let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
-    if (queueNumber == null)
-    {
-        return res.status(400).send('Current department does not exist');
-    }
+    let queueDropped = req.body.queueDropped;
+    try {
+      let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
 
-    // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
-    let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-    // let deepCopylistOfAgents = _.cloneDeep(listOfAgents);
+      if (queueNumber == null)
+      {
+          return res.status(400).send('Current department does not exist');
+      }
+      // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
+      let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+      // let deepCopylistOfAgents = _.cloneDeep(listOfAgents);
 
-    let currentlyInRtc;
-    console.log("Testing this list of agents for 1 agent online");
-    console.log(listOfAgents);
-    // by the end of this sequence, you should get a listofagents that are online and not overloaded
-    for (var i = listOfAgents.length-1; i >= 0; i--){
-        let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
-        console.log("Checking Online Status");
-        console.log(listOfAgents[i].name);
-        console.log(onlineStatus);
-        let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
-        console.log("Checking overLoadedStatus");
-        console.log(listOfAgents[i].name);
-        console.log(overLoadedStatus);
-        currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid);
-        console.log("Checking if agent is currentlyInRtc")
-        console.log(currentlyInRtc);
-        if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
-        else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
-          // if not online,OR
-          // if overLoaded, remove. OR
-          // if they are currently serving an audio / video
-          // they are removed from the array
-          listOfAgents.splice(i, 1);
-        }
-    }
-
-
-    console.log("printing list of agents");
-    console.log(listOfAgents);
-    // console.log("printing the deepCopylistOfAgents")
-    // console.log(deepCopylistOfAgents);
-    // Load Balancing....
-    // check here if servicedToday field is the same for all agents in the current listofAgents
-    var servicedTodayArr = [];
-    for (var i = 0; i< listOfAgents.length; i++) {
-        servicedTodayArr.push(listOfAgents[i].servicedToday)
-    }
-    // let servicedTodayArr = routerFunctions.LoadBalancing(listOfAgents);
-    console.log(servicedTodayArr);
-    var count = 0;
-
-    // enter this if there are more than 1 agent available.
-    if (listOfAgents.length > 1) {
-        console.log("listOfAgents.length > 1");
-        for (var i = 0; i < listOfAgents.length; i++) {
-            if (i != listOfAgents.length-1) {
-                // check for the case when ServicedToday is all the same
-                if (servicedTodayArr[i] == servicedTodayArr[i+1]) {
-                    count ++
-                }
-            }
-
-        }
-        console.log("This is the count");
-        console.log(count);
-        if (count == servicedTodayArr.length-1){
-
-            var assignedAgentIndex = (queueNumber) % listOfAgents.length;
-
-            // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
-            if (communication == "Video" || communication == "Audio") {
-              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
-            }
-
-            console.log(assignedAgentIndex);
-            if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
-                await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-                await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
-                return res.send({
-                    queueNumber: queueNumber,
-                    jid: listOfAgents[assignedAgentIndex].jid,
-                    queueStatus: "ready"
-
-                })
-            }
-        }
-    }
-
-
-    // enter this if there is only 1 agent available
-    // final check that the right agent is online and return it to client for immediate connection
-    if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
-        // update all the agent stuff first
-
-        await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-        await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
-        // sends the JID, queueNumber also sent for Debugging
-        // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
-        if (communication == "Video" || communication == "Audio") {
-          console.log("Am I here?");
-          console.log(listOfAgents[0].jid);
-
-          currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[0].jid);
+      let currentlyInRtc;
+      console.log("Testing this list of agents for 1 agent online");
+      console.log(listOfAgents);
+      // by the end of this sequence, you should get a listofagents that are online and not overloaded
+      for (var i = listOfAgents.length-1; i >= 0; i--){
+          let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+          console.log("Checking Online Status");
+          console.log(listOfAgents[i].name);
+          console.log(onlineStatus);
+          let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+          console.log("Checking overLoadedStatus");
+          console.log(listOfAgents[i].name);
+          console.log(overLoadedStatus);
+          currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid);
+          console.log("Checking if agent is currentlyInRtc")
           console.log(currentlyInRtc);
-          await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
-        }
+          if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+          else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
+            // if not online,OR
+            // if overLoaded, remove. OR
+            // if they are currently serving an audio / video
+            // they are removed from the array
+            listOfAgents.splice(i, 1);
+          }
+      }
 
-        return res.send({
+
+      console.log("printing list of agents");
+      console.log(listOfAgents);
+      // console.log("printing the deepCopylistOfAgents")
+      // console.log(deepCopylistOfAgents);
+      // Load Balancing....
+      // check here if servicedToday field is the same for all agents in the current listofAgents
+      var servicedTodayArr = [];
+      for (var i = 0; i< listOfAgents.length; i++) {
+          servicedTodayArr.push(listOfAgents[i].servicedToday)
+      }
+      // let servicedTodayArr = routerFunctions.LoadBalancing(listOfAgents);
+      console.log(servicedTodayArr);
+      var count = 0;
+
+      // enter this if there are more than 1 agent available.
+      if (listOfAgents.length > 1) {
+          console.log("listOfAgents.length > 1");
+          for (var i = 0; i < listOfAgents.length; i++) {
+              if (i != listOfAgents.length-1) {
+                  // check for the case when ServicedToday is all the same
+                  if (servicedTodayArr[i] == servicedTodayArr[i+1]) {
+                      count ++
+                  }
+              }
+          }
+          console.log("This is the count");
+          console.log(count);
+          if (count == servicedTodayArr.length-1){
+
+              var assignedAgentIndex = (queueNumber) % listOfAgents.length;
+
+              // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
+              if (communication == "Video" || communication == "Audio") {
+                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
+              }
+
+              console.log(assignedAgentIndex);
+              if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
+                  await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                  await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
+                  return res.send({
+                      queueNumber: queueNumber,
+                      jid: listOfAgents[assignedAgentIndex].jid,
+                      queueStatus: "ready"
+
+                  })
+              }
+          }
+      }
 
 
-            queueNumber: queueNumber,
-            jid: listOfAgents[0].jid,
-            queueStatus: "ready"
+      // enter this if there is only 1 agent available
+      // final check that the right agent is online and return it to client for immediate connection
+      if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+          // update all the agent stuff first
 
-        });
-    }
-    // this suggests that all candidate agents are busy or not available for this scenario. In this case,
-    // we commence v1.0 of the queueing algo
-    else
-    {
-        // since all agents are full, we now proceed to give the client a queueNumber. This queueNumber will be
-        // requested by reposted under a new method that employs a lo
+          await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+          await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+          // sends the JID, queueNumber also sent for Debugging
+          // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
+          if (communication == "Video" || communication == "Audio") {
+            console.log("Am I here?");
+            console.log(listOfAgents[0].jid);
 
-        await swaggyDatabase.addToWaitQ(name, department, communication, problem,queueNumber);
-        let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
-        return res.send({
-            queueNumber: queueNumber,
-            jid: null,
-            queueStatus: "enqueued",
-            position: queueNumber - currentlyServing
-        });
+            currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[0].jid);
+            console.log(currentlyInRtc);
+            await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
+          }
+
+          return res.send({
+
+
+              queueNumber: queueNumber,
+              jid: listOfAgents[0].jid,
+              queueStatus: "ready"
+
+          });
+      }
+      // this suggests that all candidate agents are busy or not available for this scenario. In this case,
+      // we commence v1.0 of the queueing algo
+      else
+      {
+          // since all agents are full, we now proceed to give the client a queueNumber. This queueNumber will be
+          // requested by reposted under a new method that employs a lo
+
+          await swaggyDatabase.addToWaitQ(name, department, communication, problem,queueNumber,queueDropped);
+          let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+          return res.send({
+              queueNumber: queueNumber,
+              jid: null,
+              queueStatus: "enqueued",
+              position: queueNumber - currentlyServing
+          });
+      }
+    } catch (e) {
+        return res.status(400).json({
+            message: "Unable to getRequiredCSA. Maybe there might a connection issue"
+        })
     }
 });
 
@@ -199,126 +194,142 @@ router.post('/checkQueueStatus', async(req, res) => {
     console.log("This is my queue Number : ", queueNumber);
     //console.log(queueNumber);
     let currentlyInRtc;
-    let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
-    console.log("The department is now currently serving :", currentlyServing);
-    let myturn = queueNumber < currentlyServing;
+    try {
+      let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+      console.log("The department is now currently serving :", currentlyServing);
+      let myturn = queueNumber < currentlyServing;
+      let handlingDropQ = false;
 
-    if (myturn) // Single Queue System.
-    {
-        console.log(queueNumber);
-        console.log(currentlyServing);
-        let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-        console.log(listOfAgents);
+      let DropQEventHandler = await swaggyDatabase.getCurrentQ(department, "DropQEventHandler");
+      if (queueNumber > currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
+      {
+        // increase Dpt. Current Q Number.
+        await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+        handlingDropQ = true;
+      }
+      console.log("This is the handlingDropQ status " , handlingDropQ);
+      // updates the DropQEventHandler
+      if (handlingDropQ)
+      {
+        await swaggyDatabase.updateDropQHandler(department);
+      }
 
-        // by the end of this sequence, you should get a listofagents that are online and not overloaded
-        for (var i = listOfAgents.length-1; i >= 0; i--){
-            let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
-            let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
-            currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
-            console.log(onlineStatus);
-            console.log(overLoadedStatus);
-            if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
-            else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
-                listOfAgents.splice(i, 1);
-            }
-        }
-        console.log("this is the list of agents..")
-        console.log(listOfAgents);
+      // get updated instance of Dpt Q No
+      currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+      if (myturn) // Single Queue System.
+      {
+          console.log(queueNumber);
+          console.log(currentlyServing);
+          let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+          console.log(listOfAgents);
 
-
-        // final check that the right agent is online and return it to client for immediate connection
-        if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
-            console.log("Am i in here thennnnnn?")
-            if (communication == "Video" || communication == "Audio") {
-              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
-            }
-            await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
-            await swaggyDatabase.updateWaitQ(department, 0);
-            await swaggyDatabase.updateOtherQ(department);
-            await swaggyDatabase.updateChatQ(department);
-            // sends the JID, queueNumber also sent for Debugging
-            return res.send({
-                queueNumber: queueNumber,
-                jid: listOfAgents[0].jid,
-                queueStatus : "successful"
-            });
-        }
-
-        else // only reach here if communication is !chat || currentlyInRtc || no available agent || no online agent
-        {
-          // Using Double Queue System.
-          await swaggyDatabase.splitWaitQ(department);
-          let currentQ = await swaggyDatabase.getCurrentQ(department, "Main Queue");
-          let ChatQ = await swaggyDatabase.getCurrentQ(department, "ChatQ");
-          let OtherQ = await swaggyDatabase.getCurrentQ(department, "OtherQ");
-          let selectedClient = await swaggyDatabase.clientPicker(department); // picks chat for every 2 Chat served
-          console.log("Selected Client is : ", selectedClient);
-          // if (selectedClient.Communication == "Chat")  { // if chat.
-
-          let agentList = await swaggyDatabase.checkRequestedAgents(selectedClient.Department, selectedClient.Communication);
-          console.log("agentList before anything is done :" , agentList);
-          for (var i = agentList.length-1; i >= 0; i--){
-              let onlineStatus = await rainbowMotherload.checkOnlineStatus(agentList[i].jid);
-              let overLoadedStatus = await swaggyDatabase.checkAgentSession(agentList[i].jid);
-              currentlyInRtc = await swaggyDatabase.currentlyInRtc(agentList[i].jid)
+          // by the end of this sequence, you should get a listofagents that are online and not overloaded
+          for (var i = listOfAgents.length-1; i >= 0; i--){
+              let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+              let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+              currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
               console.log(onlineStatus);
               console.log(overLoadedStatus);
-              if (selectedClient.Communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+              if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
               else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
-                  agentList.splice(i, 1);
+                  listOfAgents.splice(i, 1);
               }
           }
-          console.log("Printing the agentList! ", agentList);
+          console.log("this is the list of agents..")
+          console.log(listOfAgents);
 
-          if (agentList.length == 0) {
-            return res.send({
-                queueNumber: queueNumber,
-                jid: null,
-                position: queueNumber - currentlyServing ,
-                queueStatus : "enqueued"
-            })
+
+          // final check that the right agent is online and return it to client for immediate connection
+          if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+              console.log("Am i in here thennnnnn?")
+              if (communication == "Video" || communication == "Audio") {
+                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
+              }
+              await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+              await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+              await swaggyDatabase.updateWaitQ(department, 0);
+              await swaggyDatabase.updateOtherQ(department);
+              await swaggyDatabase.updateChatQ(department);
+              // sends the JID, queueNumber also sent for Debugging
+              return res.send({
+                  queueNumber: queueNumber,
+                  jid: listOfAgents[0].jid,
+                  queueStatus : "successful"
+              });
           }
 
-          else if (agentList.length!=0 && await rainbowMotherload.checkOnlineStatus(agentList[0].jid)) {
-            if (selectedClient.Communication == "Chat") {
-              await swaggyDatabase.updateChatQ(ChatQ[0].Department);
-              await swaggyDatabase.updateWaitQ(currentQ[1].Department,1);
-              await swaggyDatabase.incChatQServed(selectedClient.Department);
+          else // only reach here if communication is !chat || currentlyInRtc || no available agent || no online agent
+          {
+            // Using Double Queue System.
+            await swaggyDatabase.splitWaitQ(department);
+            let currentQ = await swaggyDatabase.getCurrentQ(department, "Main Queue");
+            let ChatQ = await swaggyDatabase.getCurrentQ(department, "ChatQ");
+            let OtherQ = await swaggyDatabase.getCurrentQ(department, "OtherQ");
+            let selectedClient = await swaggyDatabase.clientPicker(department); // picks chat for every 2 Chat served
+            console.log("Selected Client is : ", selectedClient);
+            // if (selectedClient.Communication == "Chat")  { // if chat.
+
+            let agentList = await swaggyDatabase.checkRequestedAgents(selectedClient.Department, selectedClient.Communication);
+            console.log("agentList before anything is done :" , agentList);
+            for (var i = agentList.length-1; i >= 0; i--){
+                let onlineStatus = await rainbowMotherload.checkOnlineStatus(agentList[i].jid);
+                let overLoadedStatus = await swaggyDatabase.checkAgentSession(agentList[i].jid);
+                currentlyInRtc = await swaggyDatabase.currentlyInRtc(agentList[i].jid)
+                console.log(onlineStatus);
+                console.log(overLoadedStatus);
+                if (selectedClient.Communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+                else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
+                    agentList.splice(i, 1);
+                }
             }
-            else if (selectedClient.Communication == "Video" || selectedClient.Communication == "Audio") {
-              currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
-              await swaggyDatabase.updateOtherQ(OtherQ[0].Department);
-              await swaggyDatabase.updateWaitQ(currentQ[0].Department,1);
-              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, agentList[0].jid, currentlyInRtc);
+            console.log("Printing the agentList! ", agentList);
+
+            if (agentList.length == 0) {
+              return res.send({
+                  queueNumber: queueNumber,
+                  jid: null,
+                  position: queueNumber - currentlyServing + 1,
+                  queueStatus : "enqueued"
+              })
             }
 
-            await swaggyDatabase.incrementAgentSession(agentList[0].jid);
+            else if (agentList.length!=0 && await rainbowMotherload.checkOnlineStatus(agentList[0].jid)) {
+              if (selectedClient.Communication == "Chat") {
+                await swaggyDatabase.updateChatQ(ChatQ[0].Department);
+                await swaggyDatabase.updateWaitQ(currentQ[1].Department,1);
+                await swaggyDatabase.incChatQServed(selectedClient.Department);
+              }
+              else if (selectedClient.Communication == "Video" || selectedClient.Communication == "Audio") {
+                currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
+                await swaggyDatabase.updateOtherQ(OtherQ[0].Department);
+                await swaggyDatabase.updateWaitQ(currentQ[0].Department,1);
+                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, agentList[0].jid, currentlyInRtc);
+              }
+              await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+              await swaggyDatabase.incrementAgentSession(agentList[0].jid);
 
-            return res.send({
-              queueNumber : selectedClient.Qno,
-              jid : agentList[0].jid,
-              queueStatus : "successful"
-            })
-          }
-          // }
-
-          // return res.send({
-          //   queueNumber: queueNumber,
-          //   jid: null,
-          //   position: queueNumber - currentlyServing  + 2, // 1 if client is at the head of the wait queue
-          //   status: "Agents are currently still serving our esteemed clients.."
-          // })
-
+              return res.send({
+                queueNumber : selectedClient.Qno,
+                jid : agentList[0].jid,
+                queueStatus : "successful"
+              })
+            }
+        }
       }
-    }
 
-    else { // not my turn.
-      return res.send({
-          queueNumber: queueNumber,
-          jid: null,
-          position: queueNumber - currentlyServing,
-          queueStatus : "enqueued"
-      })
+      else { // not my turn.
+        return res.send({
+            queueNumber: queueNumber,
+            jid: null,
+            position: queueNumber - currentlyServing + 1,
+            queueStatus : "enqueued"
+        })
+      }
+    } catch (e) {
+        return res.status(400).json({
+            message: "Unable to check current Queue Status. Please check your connection.."
+
+        })
     }
   });
 
@@ -332,24 +343,37 @@ router.post('/endChatInstance', async(req, res) => {
     let conversationID = req.body.convoID;
     let convoHistory = req.body.convoHistory;
     let clientEmail = req.body.clientEmail;
+    let queueDropped = req.body.queueDropped;
 
-
-    // ok so first step is to update agent details
-    let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication);
-    let currentlyInRtc = await swaggyDatabase.currentlyInRtc(jidOfAgent);
-    console.log(currentlyInRtc);
-
-    if (communication != "Chat") {
-      await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, jidOfAgent, currentlyInRtc);
-    }
-    //let endedConvo = await rainbowMotherload.getConversationDetails(conversationID);
-    console.log("ended convo is: ..... ");
-    // console.log(endedConvo);
-
-    // thats it if it works
-    return res.send({
-        status: "Success",
-    });
+    try {
+      if (queueDropped)
+      {
+         // Update Department Queues.
+         console.log("Queue has been dropped.");
+         console.log("Updating the Department Queues...");
+         await swaggyDatabase.handleQueueDrop(department, queueNumber, "Main Queue");
+         await swaggyDatabase.handleQueueDrop(department, queueNumber, "ChatQ");
+         await swaggyDatabase.handleQueueDrop(department, queueNumber, "OtherQ");
+         await swaggyDatabase.decDepartmentLatestActiveRequestNumber(department);
+         await swaggyDatabase.addDroppQEvent(department, queueNumber);
+         return res.send({
+           status : "queueDropped"
+         })
+       }
+      let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication);
+      let currentlyInRtc = await swaggyDatabase.currentlyInRtc(jidOfAgent);
+      // console.log(currentlyInRtc);
+      if (communication != "Chat") {
+        await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, jidOfAgent, currentlyInRtc);
+      }
+      console.log("ended convo is: ..... ");
+      return res.send({
+          status: "Success"
+      });
+    } catch (e) {
+      return res.status(400).json({
+          message: "Failed to end Chat properly.."
+      })}
 });
 
 module.exports = router;

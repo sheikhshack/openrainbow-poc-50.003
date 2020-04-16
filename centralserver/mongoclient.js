@@ -19,6 +19,7 @@ client.connect( function(err, client) {
 
                     console.log("Starting reset...")
                     reset();
+                    cleanUp("Logging");
                     // resetQ();
                     console.log("System Wide reset has been compeleted")
 });
@@ -45,7 +46,6 @@ Checks availability of ALL agents of a specific department
 ------------------------------------
 checkAvail("Graduate Office","Chat")
 */
-// Function tested for CATA testing
 async function checkRequestedAgents(departmentID, communication) {
                   // Get the Departments collection
                   let result = await client.db(dbName).collection('Agent').find({
@@ -67,7 +67,7 @@ addAgent("AAF","testjid", "tinkitishere", ["Chat", "Audio"], "Tin Kit Office")
 */
 async function addAgent(_id, jid, name, typeOfComm, departmentID){
     await client.db(dbName).collection('Agent').insertOne({
-                                                    '_id' : _id,
+        '_id' : _id,
         'jid' : jid,
         'Department_id' : departmentID,
         'name' : name,
@@ -145,13 +145,7 @@ async function checkAgentSession(jid) {
     // returns a document that supports JSON format.
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
         {'jid': jid},
-        {
-            projection: {
-                'currentActiveSessions': 1,
-                'reserve': 1
-            }
-        });
-
+        {projection: {'currentActiveSessions': 1,'reserve': 1}});
 
     if (JSONObj.currentActiveSessions < JSONObj.reserve) {
         return true;
@@ -159,7 +153,6 @@ async function checkAgentSession(jid) {
         console.log("Please wait. Current CSA is working at maximum capacity");
         return false;
     }
-
 }
 
 
@@ -349,6 +342,15 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
     return result.value.totalActiveRequests;
 }
 
+async function decDepartmentLatestActiveRequestNumber(department)
+{
+  await client.db(dbName).collection('Department').findOneAndUpdate(
+    {'_id' : department},
+    {$inc : {'totalActiveRequests' : -1}})
+}
+
+
+
 
 /**
  Given Agent JID and DepartmentID
@@ -397,18 +399,16 @@ async function completedARequest(jidOfAgent, department, convoHistory, clientEma
     return true;
 }
 
-async function sleep(msec) {
-    return new Promise(resolve => setTimeout(resolve, msec));
-}
 
-async function addToWaitQ(name, department, communication, problem,queueNumber)
+async function addToWaitQ(name, department, communication, problem, queueNumber, queueDropped)
 {
   let thisRequest = {
       "Department": department,
       "Client": name,
       "Communication": communication,
       "Problem": problem,
-      "Qno": queueNumber
+      "Qno": queueNumber,
+      "queueDropped" : queueDropped
     }
 
   // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
@@ -424,25 +424,42 @@ async function addToWaitQ(name, department, communication, problem,queueNumber)
 
 async function getCurrentQ(department, queueType)
 {
-  if (queueType == "Main Queue") {
+  if (queueType === "Main Queue") {
     let JSONObj = await client.db(dbName).collection('Queues').findOne(
       {"Department" : department},
       {$projection: {"Queue" : 1}})
     return JSONObj.Queue;
   }
-  else if (queueType == "ChatQ") {
+  else if (queueType === "ChatQ") {
     let JSONObj = await client.db(dbName).collection('Queues').findOne(
       {"Department" : department},
       {$projection: {"ChatQ" : 1}})
     return JSONObj.ChatQ;
   }
-  else if (queueType == "OtherQ") {
+  else if (queueType === "OtherQ") {
     let JSONObj = await client.db(dbName).collection('Queues').findOne(
       {"Department" : department},
       {$projection: {"OtherQ" : 1}})
     return JSONObj.OtherQ;
   }
+  else if (queueType === "DropQEventHandler") {
+    let JSONObj = await client.db(dbName).collection('Queues').findOne(
+      {"Department" : department},
+      {$projection: {"DropQEventHandler" : 1}})
+    return JSONObj.DropQEventHandler;
+  }
+}
 
+/*
+This method updates the DropQEventHandler by remove the first element.
+This happens when a DropQ has been handled.
+*/
+async function updateDropQHandler(department) {
+  let currentQ = await getCurrentQ(department, "DropQEventHandler");
+  currentQ.splice(0,1);
+  await client.db(dbName).collection('Queues').findOneAndUpdate(
+    {"Department" : department},
+    {$set: {"DropQEventHandler" : currentQ}})
 }
 
 async function updateWaitQ(department, index)
@@ -455,6 +472,8 @@ async function updateWaitQ(department, index)
     {"Department" : department},
     {$set: {"Queue" : currentQ}})
 }
+
+
 
 async function splitWaitQ(department)
 {
@@ -533,6 +552,62 @@ async function incChatQServed(department)
 }
 
 
+/*
+This method will update all Department Queues in the event of
+Dropped Queue
+*/
+async function handleQueueDrop(department, Qno, QueueType)
+{
+  let index;
+  let currentQ = await getCurrentQ(department, QueueType);
+  for (var i = 0; i < currentQ.length; i++) {
+    if (currentQ[i].Qno == Qno) {
+      index = i;
+    }
+  }
+
+  if (index != null) {
+  currentQ.splice(index,1);
+  }
+
+  if (QueueType === "Main Queue") {
+    await client.db(dbName).collection('Queues').findOneAndUpdate(
+      {'Department' : department},
+      {$set: {"Queue" : currentQ }})
+  }
+  else if (QueueType === "ChatQ") {
+    await client.db(dbName).collection('Queues').findOneAndUpdate(
+      {'Department' : department},
+      {$set: {"ChatQ" : currentQ }})
+  }
+  else if (QueueType === "OtherQ") {
+    await client.db(dbName).collection('Queues').findOneAndUpdate(
+      {'Department' : department},
+      {$set: {"OtherQ" : currentQ }
+    })
+  }
+}
+
+/*
+This method adds to the DropQEventHandler in the event of a Queue Drop
+*/
+async function addDroppQEvent(department, Qno)
+{
+  let DropQClient =
+  {
+  "Qno" : Qno,
+  "DropQHandled" : false
+  }
+  let DropQEventHandler = []
+  DropQEventHandler.push(DropQClient)
+  await client.db(dbName).collection('Queues').findOneAndUpdate(
+    {"Department" :  department},
+    {$set: {'DropQEventHandler' : DropQEventHandler}})
+}
+
+
+
+
 /**
  -----------------------------------------------------------------------------
  ------------------------- DB Maintenance ------------------------------------
@@ -560,19 +635,17 @@ async function reset(){
                 'Queue' : [],
                 'ChatQ' : [],
                 'OtherQ': [],
-                'ChatQServed' : 0
+                'ChatQServed' : 0,
+                'DropQEventHandler' : []
             }})
 }
 
-// async function cleanUp(department, collection){
-//   await client.db(dbName).collection(collection)
-// }
-
-
-
-
-
-
+/*
+Deletes the entire Collection.
+*/
+async function cleanUp(collection){
+  await client.db(dbName).collection(collection).deleteMany({})
+}
 
 
 
@@ -598,5 +671,10 @@ module.exports = {
     updateOtherQ : updateOtherQ,
     clientPicker : clientPicker,
     incChatQServed : incChatQServed,
+    handleQueueDrop : handleQueueDrop,
+    decDepartmentLatestActiveRequestNumber : decDepartmentLatestActiveRequestNumber,
+    addDroppQEvent : addDroppQEvent,
+    updateDropQHandler : updateDropQHandler,
+    cleanUp : cleanUp,
     reset : reset
 };
