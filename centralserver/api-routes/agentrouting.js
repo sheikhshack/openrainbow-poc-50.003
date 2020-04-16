@@ -176,6 +176,9 @@ router.post('/getRequiredCSA', async(req, res) => {
           });
       }
     } catch (e) {
+
+        await swaggyDatabase.incrementFailedRequests(department);
+        await swaggyDatabase.decDepartmentLatestActiveRequestNumber(department);
         return res.status(400).json({
             message: "Unable to getRequiredCSA. Maybe there might a connection issue"
         })
@@ -201,7 +204,7 @@ router.post('/checkQueueStatus', async(req, res) => {
       let handlingDropQ = false;
 
       let DropQEventHandler = await swaggyDatabase.getCurrentQ(department, "DropQEventHandler");
-      if (queueNumber > currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
+      if (queueNumber == currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
       {
         // increase Dpt. Current Q Number.
         await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
@@ -210,7 +213,7 @@ router.post('/checkQueueStatus', async(req, res) => {
       console.log("This is the handlingDropQ status " , handlingDropQ);
       // updates the DropQEventHandler
       if (handlingDropQ)
-      {
+      { // check the queue
         await swaggyDatabase.updateDropQHandler(department);
       }
 

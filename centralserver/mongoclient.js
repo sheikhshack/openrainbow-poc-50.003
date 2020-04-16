@@ -606,6 +606,13 @@ async function addDroppQEvent(department, Qno)
 }
 
 
+async function incrementFailedRequests(department)
+{
+  await client.db(dbName).collection('Department').findOneAndUpdate(
+    {"_id" :  department},
+    {$inc: {'failedRequests' : 1}})
+}
+
 
 
 /**
@@ -676,5 +683,6 @@ module.exports = {
     addDroppQEvent : addDroppQEvent,
     updateDropQHandler : updateDropQHandler,
     cleanUp : cleanUp,
+    incrementFailedRequests : incrementFailedRequests,
     reset : reset
 };
