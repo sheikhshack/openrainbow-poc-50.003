@@ -8,6 +8,8 @@ const User = require('./mongoosemigrations/models/userschema.js');
 const Agent = require('./mongoosemigrations/models/agentschema.js');
 const LogSessions = require('./mongoosemigrations/models/loggingschema.js');
 const Departments = require('./mongoosemigrations/models/departmentschema.js');
+const AdminPolicy = require('./mongoosemigrations/models/adminpolicy.js');
+
 
 // Customisations
 const options = {
@@ -30,6 +32,11 @@ const parentOfDepartment= {
     icon: 'Building',
 };
 
+const parentofSuperuser= {
+    name: 'Bot Policy Options',
+    icon: 'Robot',
+};
+
 AdminBro.registerAdapter(AdminBroMongoose);
 const adminBro = new AdminBro({
     rootPath: '/admin',
@@ -37,7 +44,8 @@ const adminBro = new AdminBro({
 
         {resource: Agent, options: {parent: parentOfAgents}},
         {resource: Departments, options: {parent: parentOfDepartment}},
-        {resource: LogSessions, options: {parent: parentOfLogging}}
+        {resource: LogSessions, options: {parent: parentOfLogging}},
+        {resource: AdminPolicy, options: {parent: parentofSuperuser}}
     ],
     branding: {
         companyName: "Swaggy Inc. ",

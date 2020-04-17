@@ -4,7 +4,7 @@ const loggingSchema = mongoose.Schema({
     Department: { type: String, required: true },
     ClientEmail: { type: String, required: true },
     AgentJID: { type: String, required: true },
-    Status: { type: String },
+    Status: { type: Boolean },
     TimeofLog: { type: Date },
     TypeOfCommunication: { type: String, result:true },
     ChatHistory: { type: Object },
