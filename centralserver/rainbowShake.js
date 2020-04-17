@@ -77,7 +77,7 @@ async function queryAgentStatus(agentEmail) {
 }
 async function getConversationDetails(convoID) {
     let convoData = await rainbowSDK.conversations.getConversationById(convoID);
-    return convoData;
+    console.log(convoData);
 
 }
 

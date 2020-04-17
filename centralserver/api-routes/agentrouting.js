@@ -11,6 +11,7 @@ const routerFunctions = require('./helperfunctions');
 router.get('/createguest', async (req, res) => {
   try {
     let loginCreds = await rainbowMotherload.createGuests(10800);
+
     return res.send({
         guestID : loginCreds.loginID,
         guestPass: loginCreds.loginPass
@@ -23,12 +24,22 @@ router.get('/createguest', async (req, res) => {
 
 
 router.get('/createguestdynamic', async (req, res) => {
+    let ticketSerialized;
     let nameIntended = req.query.name;
     try {
-      let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #00001");
+        let ticketNumber = await swaggyDatabase.getAndSetTicketNumber();
+        if (ticketNumber.toString().length < 8){
+            ticketSerialized = String("00000000" + ticketNumber.toString()).slice(-8);
+        }
+        else{
+            ticketSerialized = ticketNumber.toString()
+        }
+         // returns 00123
+      let loginCreds = await rainbowMotherload.createGuestWithName(nameIntended, "Ticket #" + ticketSerialized);
       return res.send({
           guestID : loginCreds.loginID,
-          guestPass: loginCreds.loginPass
+          guestPass: loginCreds.loginPass,
+          ticketNumber: ticketNumber
       });
     } catch (e) {
         return res.status(400).json({
@@ -193,8 +204,10 @@ router.post('/getRequiredCSA', async(req, res) => {
 
         await swaggyDatabase.incrementFailedRequests(department);
         await swaggyDatabase.decDepartmentLatestActiveRequestNumber(department);
-        return res.status(400).json({
-            message: "Unable to getRequiredCSA. Maybe there might a connection issue"
+        let botPolicy = await swaggyDatabase.retrieveBotPolicy();
+        return res.status(200).json({
+            message: "Unable to getRequiredCSA. ALL CSAs are offline",
+            jid: botPolicy.jid
         })
     }
 });

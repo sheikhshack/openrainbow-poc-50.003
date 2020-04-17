@@ -564,6 +564,16 @@ async function retrieveBotPolicy(){
     return policy;
 }
 
+async function getAndSetTicketNumber() {
+
+    let result = await client.db(dbName).collection('AdminPolicy').findOneAndUpdate(
+        {'_id': '5e992e1adf0eda1bbade765e'},
+        {
+            $inc: {'currentRequests': 1}
+        });
+    return result.value.currentRequests;
+}
+
 /*
 This method will update all Department Queues in the event of
 Dropped Queue
@@ -697,5 +707,6 @@ module.exports = {
     cleanUp : cleanUp,
     incrementFailedRequests : incrementFailedRequests,
     retrieveBotPolicy: retrieveBotPolicy,
+    getAndSetTicketNumber: getAndSetTicketNumber,
     reset : reset
 };

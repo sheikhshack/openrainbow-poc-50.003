@@ -73,6 +73,10 @@ router.post('/terminateUserOnRainbow', async (req, res) => {
 
 });
 
+/**TODO: @Shake
+ * These are for testing. Please remove when done
+ *
+ */
 router.get('/retrieveBotPolicy', async (req, res) => {
     let result = await swaggyDatabase.retrieveBotPolicy();
     return res.send({
@@ -81,7 +85,22 @@ router.get('/retrieveBotPolicy', async (req, res) => {
     });
 });
 
+router.post('/getConvoDetails', async (req, res) => {
+    let input = req.body;
+    let result = await rainbowMotherload.getConversationDetails(input.id);
+    return res.send({
+        status: "Successful",
+        summary: result
+    });
+});
 
+router.get('/getTicketNumber', async (req, res) => {
+    let result = await swaggyDatabase.getAndSetTicketNumber();
+    return res.send({
+        status: "Successful",
+        summary: result
+    });
+});
 
 // WARNING!
 // deletes all documents in the collection
@@ -94,6 +113,6 @@ router.post('/cleanUpSelectedCollection', async (req, res) => {
         message: "Failed to clean collection. Did you enter the right Collection Name?"
     })
   }
-})
+});
 
 module.exports = router;
