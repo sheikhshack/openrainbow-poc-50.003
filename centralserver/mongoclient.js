@@ -279,7 +279,7 @@ Creates a Logging Document
 */
 async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation)
 {
-  let finalObj = parseLogs(conversation, communication);
+  // let finalObj = parseLogs(conversation, communication);
   await client.db(dbName).collection('Logging').insertOne({
       "Department": department,
       "ClientEmail": clientEmail,
@@ -417,7 +417,7 @@ async function addToWaitQ(name, department, communication, problem, queueNumber,
   // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
   //   {"Department" : department},
   //   {projection: {'Queue' : 1}})
-  let currentQ = await getCurrentQ(department, "Main Queue");
+  let currentQ = []
   currentQ.push(thisRequest);
   await client.db(dbName).collection('Queues').findOneAndUpdate(
     {"Department" : department},
