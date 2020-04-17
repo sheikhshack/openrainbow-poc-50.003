@@ -38,11 +38,25 @@ router.get('/createguestdynamic', async (req, res) => {
 
 
 router.post('/getRequiredCSA', async(req, res) => {
+
     let name = req.body.client;
     let department = req.body.department;
     let communication = req.body.communication;
     let problem = req.body.problem;
     let queueDropped = req.body.queueDropped;
+
+    // Attaching Interceptor to intercept for bot policy
+    let botPolicy = await swaggyDatabase.retrieveBotPolicy();
+    if (botPolicy.activeAll === true){
+        return res.send({
+            queueNumber: -1,
+            jid: botPolicy.jid,
+            queueStatus: "botActive"
+        })
+
+    }
+
+    // Continues routing as intended
     try {
       let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
 

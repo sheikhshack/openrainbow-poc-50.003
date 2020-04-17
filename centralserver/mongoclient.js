@@ -551,6 +551,18 @@ async function incChatQServed(department)
     {$inc: {"ChatQServed" : 1}})
 }
 
+/**
+ -----------------------------------------------------------------------------
+ ------------------------- Additional Feats ------------------------------------
+ -----------------------------------------------------------------------------
+ */
+
+
+async function retrieveBotPolicy(){
+    let policy = await client.db(dbName).collection(('AdminPolicy')).findOne();
+    console.log(policy);
+    return policy;
+}
 
 /*
 This method will update all Department Queues in the event of
@@ -684,5 +696,6 @@ module.exports = {
     updateDropQHandler : updateDropQHandler,
     cleanUp : cleanUp,
     incrementFailedRequests : incrementFailedRequests,
+    retrieveBotPolicy: retrieveBotPolicy,
     reset : reset
 };

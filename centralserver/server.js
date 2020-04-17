@@ -39,6 +39,9 @@ app.get('/', function (req,res) {
 });
 
 
+
+
+
 // Error handling for invalid paths
 app.use((req,res,next) =>{
     const error = new Error("Path Not Found - Refer to our API Documentation");

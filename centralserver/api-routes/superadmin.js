@@ -73,6 +73,16 @@ router.post('/terminateUserOnRainbow', async (req, res) => {
 
 });
 
+router.get('/retrieveBotPolicy', async (req, res) => {
+    let result = await swaggyDatabase.retrieveBotPolicy();
+    return res.send({
+        status: "Successful",
+        summary: result
+    });
+});
+
+
+
 // WARNING!
 // deletes all documents in the collection
 router.post('/cleanUpSelectedCollection', async (req, res) => {
