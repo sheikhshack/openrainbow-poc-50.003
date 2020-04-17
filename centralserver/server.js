@@ -64,7 +64,7 @@ mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb
     .then(() => {
         console.log('🔥Mongoose Connected...');
 
-        //uncomment for heroku
+        // //uncomment for heroku
         // let port = process.env.PORT || 8080;
         // app.listen(port, () => {
         //  console.log('Server is running on port ' + port);

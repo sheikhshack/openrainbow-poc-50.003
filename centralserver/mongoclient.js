@@ -256,9 +256,12 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
 Given a JSON Chat History (from front end)
 Return repackaged JSON Object for Logging Collection
 */
-function parseLogs(conversation) {
+function parseLogs(conversation, communication) {
   let value;
   let finalObj = {};
+  if (communication !== "Chat"){
+      return finalObj;
+  }
   for (var i = 0; i< conversation.length; i++) {
     value = conversation[i].data
     if (conversation[i].side == "R") {
@@ -276,7 +279,7 @@ Creates a Logging Document
 */
 async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation)
 {
-  let finalObj = parseLogs(conversation);
+  let finalObj = parseLogs(conversation, communication);
   await client.db(dbName).collection('Logging').insertOne({
       "Department": department,
       "ClientEmail": clientEmail,
