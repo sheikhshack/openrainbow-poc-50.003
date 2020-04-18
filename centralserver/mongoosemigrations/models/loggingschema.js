@@ -7,7 +7,7 @@ const loggingSchema = mongoose.Schema({
     AgentJID: { type: String, required: true },
     Status: { type: Boolean },
     TimeofLog: { type: Date },
-    TypeOfCommunication: { type: String, result:true },
+    TypeOfCommunication: { type: String, required:true , enum: ['Chat', 'Audio', 'Video']},
     ChatHistory: { type: Object },
     UpdatedAt: { type: Date, default: Date.now() },
 }, {collection: 'Logging'});

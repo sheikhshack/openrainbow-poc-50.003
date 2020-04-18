@@ -6,7 +6,7 @@ const agentSchema = mongoose.Schema({
     Department_id: { type: String, required: true },
     name: { type: String },
     availability: { type: Boolean },
-    typeOfComm: { type: Array },
+    typeOfComm: { type: Array, required: true},
     currentActiveSessions: { type: Number },
     reserve: { type: Number },
     servicedToday: { type: Number },
