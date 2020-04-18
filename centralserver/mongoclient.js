@@ -287,7 +287,7 @@ async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, com
       "Status": true,
       "TimeofLog": String(new Date()),
       "TypeOfCommunication": communication,
-      "ChatHistory": finalObj,
+      "ChatHistory": conversation,
       "UpdatedAt": new Date(Date.now()) })
 }
 
@@ -414,10 +414,10 @@ async function addToWaitQ(name, department, communication, problem, queueNumber,
       "queueDropped" : queueDropped
     }
 
-  // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
-  //   {"Department" : department},
-  //   {projection: {'Queue' : 1}})
-  let currentQ = []
+  let JSONObj =  await client.db(dbName).collection('Queues').findOne(
+    {"Department" : department},
+    {projection: {'Queue' : 1}})
+  let currentQ = JSONObj.Queue;
   currentQ.push(thisRequest);
   await client.db(dbName).collection('Queues').findOneAndUpdate(
     {"Department" : department},
@@ -449,6 +449,8 @@ async function getCurrentQ(department, queueType)
     let JSONObj = await client.db(dbName).collection('Queues').findOne(
       {"Department" : department},
       {$projection: {"DropQEventHandler" : 1}})
+
+    console.log("this is the Jasjkfgaisduyfgasduf ", JSONObj)
     return JSONObj.DropQEventHandler;
   }
 }
@@ -554,6 +556,24 @@ async function incChatQServed(department)
     {$inc: {"ChatQServed" : 1}})
 }
 
+
+async function getQueueNumber(department, queueNumber)
+{
+  let currentQ = await getCurrentQ(department, "Main Queue");
+  console.log("Curent QQQQQQQQ " , currentQ)
+  let clientQno;
+  for (var i = 0; i < currentQ.length; i++) {
+    if (queueNumber == currentQ[i].Qno) {
+      clientQno = currentQ.indexOf(currentQ[i]);
+      console.log("Inside getQueueNumber Function and this is the Qno ", clientQno);
+    }
+    else {
+      console.log("Client is not in the wait Queue!");
+    }
+  }
+  return clientQno;
+}
+
 /**
  -----------------------------------------------------------------------------
  ------------------------- Additional Feats ------------------------------------
@@ -639,6 +659,24 @@ async function incrementFailedRequests(department)
 }
 
 
+/**
+ -----------------------------------------------------------------------------
+ ---------------------- FailedRequests Collection ---------------------------
+ -----------------------------------------------------------------------------
+ */
+
+// This method adds a failedRequest event to the FailedRequests Collection
+ async function logFailedRequest(department, clientEmail, communication, problem) {
+   await client.db(dbName).collection('FailedRequests').insertOne(
+    {
+      'Department' : department,
+      'ClientEmail': clientEmail,
+      'Communication' : communication,
+      'Problem' :  problem
+    })
+ }
+
+
 
 /**
  -----------------------------------------------------------------------------
@@ -711,5 +749,7 @@ module.exports = {
     incrementFailedRequests : incrementFailedRequests,
     retrieveBotPolicy: retrieveBotPolicy,
     getAndSetTicketNumber: getAndSetTicketNumber,
+    logFailedRequest : logFailedRequest,
+    getQueueNumber :  getQueueNumber,
     reset : reset
 };

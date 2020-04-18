@@ -55,6 +55,7 @@ router.post('/getRequiredCSA', async(req, res) => {
     let communication = req.body.communication;
     let problem = req.body.problem;
     let queueDropped = req.body.queueDropped;
+    let clientEmail = req.body.email;
 
     // Attaching Interceptor to intercept for bot policy
     let botPolicy = await swaggyDatabase.retrieveBotPolicy();
@@ -64,11 +65,11 @@ router.post('/getRequiredCSA', async(req, res) => {
             jid: botPolicy.jid,
             queueStatus: "botActive"
         })
-
     }
 
     // Continues routing as intended
-    try {
+    try{
+
       let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
 
       if (queueNumber == null)
@@ -77,7 +78,6 @@ router.post('/getRequiredCSA', async(req, res) => {
       }
       // by the end of this line, you should get a listofagents that meet the request, balance algo incoporated
       let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-      // let deepCopylistOfAgents = _.cloneDeep(listOfAgents);
 
       let currentlyInRtc;
       console.log("Testing this list of agents for 1 agent online");
@@ -85,6 +85,13 @@ router.post('/getRequiredCSA', async(req, res) => {
       // by the end of this sequence, you should get a listofagents that are online and not overloaded
       for (var i = listOfAgents.length-1; i >= 0; i--){
           let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+          if (!onlineStatus) {
+            await swaggyDatabase.logFailedRequest(department, clientEmail, communication, problem);
+            res.send({
+              message: "CSA Agents are all offline..."
+            })
+          }
+
           console.log("Checking Online Status");
           console.log(listOfAgents[i].name);
           console.log(onlineStatus);
@@ -104,6 +111,8 @@ router.post('/getRequiredCSA', async(req, res) => {
             listOfAgents.splice(i, 1);
           }
       }
+
+
 
 
       console.log("printing list of agents");
@@ -197,7 +206,7 @@ router.post('/getRequiredCSA', async(req, res) => {
               queueNumber: queueNumber,
               jid: null,
               queueStatus: "enqueued",
-              position: queueNumber - currentlyServing
+              position: queueNumber - currentlyServing + 1
           });
       }
     } catch (e) {
@@ -231,11 +240,14 @@ router.post('/checkQueueStatus', async(req, res) => {
       let handlingDropQ = false;
 
       let DropQEventHandler = await swaggyDatabase.getCurrentQ(department, "DropQEventHandler");
+      console.log("This is the dropQeventhandler object ", DropQEventHandler)
+      if (DropQEventHandler.length != 0) {
       if (queueNumber == currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
-      {
-        // increase Dpt. Current Q Number.
-        await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-        handlingDropQ = true;
+        {
+          // increase Dpt. Current Q Number.
+          await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+          handlingDropQ = true;
+        }
       }
       console.log("This is the handlingDropQ status " , handlingDropQ);
       // updates the DropQEventHandler
@@ -288,9 +300,19 @@ router.post('/checkQueueStatus', async(req, res) => {
               });
           }
 
-          else // only reach here if communication is !chat || currentlyInRtc || no available agent || no online agent
+          else if (listOfAgents.length == 0) { // enter this if client is the head of the wait Q and !chat.
+            let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
+            return res.send({
+              queueNumber: queueNumber,
+              jid: null,
+              position: clientQno,
+              queueStatus : "enqueued"
+            })
+          }
+        }
+
+        else if (queueNumber == currentlyServing)  // next in line.
           {
-            // Using Double Queue System.
             await swaggyDatabase.splitWaitQ(department);
             let currentQ = await swaggyDatabase.getCurrentQ(department, "Main Queue");
             let ChatQ = await swaggyDatabase.getCurrentQ(department, "ChatQ");
@@ -315,10 +337,12 @@ router.post('/checkQueueStatus', async(req, res) => {
             console.log("Printing the agentList! ", agentList);
 
             if (agentList.length == 0) {
+              let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
+              console.log("This is the clientQno " , clientQno)
               return res.send({
                   queueNumber: queueNumber,
                   jid: null,
-                  position: queueNumber - currentlyServing + 1,
+                  position: clientQno,
                   queueStatus : "enqueued"
               })
             }
@@ -335,7 +359,7 @@ router.post('/checkQueueStatus', async(req, res) => {
                 await swaggyDatabase.updateWaitQ(currentQ[0].Department,1);
                 await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, agentList[0].jid, currentlyInRtc);
               }
-              await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+              // await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
               await swaggyDatabase.incrementAgentSession(agentList[0].jid);
 
               return res.send({
@@ -345,17 +369,21 @@ router.post('/checkQueueStatus', async(req, res) => {
               })
             }
         }
-      }
+
 
       else { // not my turn.
+        let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
+        console.log("Not your turn");
         return res.send({
             queueNumber: queueNumber,
             jid: null,
-            position: queueNumber - currentlyServing + 1,
+            position: clientQno,
             queueStatus : "enqueued"
         })
       }
-    } catch (e) {
+
+    } catch (e)
+    {
         return res.status(400).json({
             message: "Unable to check current Queue Status. Please check your connection.."
 
@@ -400,7 +428,8 @@ router.post('/endChatInstance', async(req, res) => {
       return res.send({
           status: "Success"
       });
-    } catch (e) {
+    }
+    catch (e) {
       return res.status(400).json({
           message: "Failed to end Chat properly.."
       })}
