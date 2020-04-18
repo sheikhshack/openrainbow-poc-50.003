@@ -672,7 +672,8 @@ async function incrementFailedRequests(department)
       'Department' : department,
       'ClientEmail': clientEmail,
       'Communication' : communication,
-      'Problem' :  problem
+      'Problem' :  problem,
+      'Date' : String(new Date())
     })
  }
 

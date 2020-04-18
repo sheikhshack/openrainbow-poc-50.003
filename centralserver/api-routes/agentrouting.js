@@ -57,6 +57,8 @@ router.post('/getRequiredCSA', async(req, res) => {
     let queueDropped = req.body.queueDropped;
     let clientEmail = req.body.email;
 
+    let allAgentsOffline = false;
+
     // Attaching Interceptor to intercept for bot policy
     let botPolicy = await swaggyDatabase.retrieveBotPolicy();
     if (botPolicy.activeAll === true){
@@ -69,7 +71,7 @@ router.post('/getRequiredCSA', async(req, res) => {
 
     // Continues routing as intended
     try{
-
+      
       let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
 
       if (queueNumber == null)
@@ -86,10 +88,7 @@ router.post('/getRequiredCSA', async(req, res) => {
       for (var i = listOfAgents.length-1; i >= 0; i--){
           let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
           if (!onlineStatus) {
-            await swaggyDatabase.logFailedRequest(department, clientEmail, communication, problem);
-            res.send({
-              message: "CSA Agents are all offline..."
-            })
+            allAgentsOffline = true;
           }
 
           console.log("Checking Online Status");
@@ -112,111 +111,119 @@ router.post('/getRequiredCSA', async(req, res) => {
           }
       }
 
-
-
-
-      console.log("printing list of agents");
-      console.log(listOfAgents);
-      // console.log("printing the deepCopylistOfAgents")
-      // console.log(deepCopylistOfAgents);
-      // Load Balancing....
-      // check here if servicedToday field is the same for all agents in the current listofAgents
-      var servicedTodayArr = [];
-      for (var i = 0; i< listOfAgents.length; i++) {
-          servicedTodayArr.push(listOfAgents[i].servicedToday)
-      }
-      // let servicedTodayArr = routerFunctions.LoadBalancing(listOfAgents);
-      console.log(servicedTodayArr);
-      var count = 0;
-
-      // enter this if there are more than 1 agent available.
-      if (listOfAgents.length > 1) {
-          console.log("listOfAgents.length > 1");
-          for (var i = 0; i < listOfAgents.length; i++) {
-              if (i != listOfAgents.length-1) {
-                  // check for the case when ServicedToday is all the same
-                  if (servicedTodayArr[i] == servicedTodayArr[i+1]) {
-                      count ++
-                  }
-              }
-          }
-          console.log("This is the count");
-          console.log(count);
-          if (count == servicedTodayArr.length-1){
-
-              var assignedAgentIndex = (queueNumber) % listOfAgents.length;
-
-              // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
-              if (communication == "Video" || communication == "Audio") {
-                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
-              }
-
-              console.log(assignedAgentIndex);
-              if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
-                  await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-                  await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
-                  return res.send({
-                      queueNumber: queueNumber,
-                      jid: listOfAgents[assignedAgentIndex].jid,
-                      queueStatus: "ready"
-
-                  })
-              }
-          }
-      }
-
-
-      // enter this if there is only 1 agent available
-      // final check that the right agent is online and return it to client for immediate connection
-      if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
-          // update all the agent stuff first
-
-          await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-          await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
-          // sends the JID, queueNumber also sent for Debugging
-          // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
-          if (communication == "Video" || communication == "Audio") {
-            console.log("Am I here?");
-            console.log(listOfAgents[0].jid);
-
-            currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[0].jid);
-            console.log(currentlyInRtc);
-            await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
-          }
-
-          return res.send({
-
-
-              queueNumber: queueNumber,
-              jid: listOfAgents[0].jid,
-              queueStatus: "ready"
-
-          });
-      }
-      // this suggests that all candidate agents are busy or not available for this scenario. In this case,
-      // we commence v1.0 of the queueing algo
-      else
+      if (allAgentsOffline)
       {
-          // since all agents are full, we now proceed to give the client a queueNumber. This queueNumber will be
-          // requested by reposted under a new method that employs a lo
-
-          await swaggyDatabase.addToWaitQ(name, department, communication, problem,queueNumber,queueDropped);
-          let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
-          return res.send({
-              queueNumber: queueNumber,
-              jid: null,
-              queueStatus: "enqueued",
-              position: queueNumber - currentlyServing + 1
-          });
-      }
-    } catch (e) {
-
+        await swaggyDatabase.logFailedRequest(department, clientEmail, communication, problem);
         await swaggyDatabase.incrementFailedRequests(department);
         await swaggyDatabase.decDepartmentLatestActiveRequestNumber(department);
         let botPolicy = await swaggyDatabase.retrieveBotPolicy();
         return res.status(200).json({
-            message: "Unable to getRequiredCSA. ALL CSAs are offline",
-            jid: botPolicy.jid
+                message: "Unable to getRequiredCSA. ALL CSAs are offline",
+                jid: botPolicy.jid
+            })
+      }
+      else {
+
+        console.log("printing list of agents");
+        console.log(listOfAgents);
+        // console.log("printing the deepCopylistOfAgents")
+        // console.log(deepCopylistOfAgents);
+        // Load Balancing....
+        // check here if servicedToday field is the same for all agents in the current listofAgents
+        var servicedTodayArr = [];
+        for (var i = 0; i< listOfAgents.length; i++) {
+            servicedTodayArr.push(listOfAgents[i].servicedToday)
+        }
+        // let servicedTodayArr = routerFunctions.LoadBalancing(listOfAgents);
+        console.log(servicedTodayArr);
+        var count = 0;
+
+        // enter this if there are more than 1 agent available.
+        if (listOfAgents.length > 1) {
+            console.log("listOfAgents.length > 1");
+            for (var i = 0; i < listOfAgents.length; i++) {
+                if (i != listOfAgents.length-1) {
+                    // check for the case when ServicedToday is all the same
+                    if (servicedTodayArr[i] == servicedTodayArr[i+1]) {
+                        count ++
+                    }
+                }
+            }
+            console.log("This is the count");
+            console.log(count);
+            if (count == servicedTodayArr.length-1){
+
+                var assignedAgentIndex = (queueNumber) % listOfAgents.length;
+
+                // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
+                if (communication == "Video" || communication == "Audio") {
+                  await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[assignedAgentIndex].jid, currentlyInRtc);
+                }
+
+                console.log(assignedAgentIndex);
+                if (await rainbowMotherload.checkOnlineStatus(listOfAgents[assignedAgentIndex].jid)) {
+                    await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                    await swaggyDatabase.incrementAgentSession(listOfAgents[assignedAgentIndex].jid);
+                    return res.send({
+                        queueNumber: queueNumber,
+                        jid: listOfAgents[assignedAgentIndex].jid,
+                        queueStatus: "ready"
+
+                    })
+                }
+            }
+        }
+
+
+        // enter this if there is only 1 agent available
+        // final check that the right agent is online and return it to client for immediate connection
+        if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+            // update all the agent stuff first
+
+            await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+            await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+            // sends the JID, queueNumber also sent for Debugging
+            // check clientReq communication & update agent currentlyInRtc status iif the selected client request is audio / video.
+            if (communication == "Video" || communication == "Audio") {
+              console.log("Am I here?");
+              console.log(listOfAgents[0].jid);
+
+              currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[0].jid);
+              console.log(currentlyInRtc);
+              await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
+            }
+
+            return res.send({
+
+
+                queueNumber: queueNumber,
+                jid: listOfAgents[0].jid,
+                queueStatus: "ready"
+
+            });
+        }
+        // this suggests that all candidate agents are busy or not available for this scenario. In this case,
+        // we commence v1.0 of the queueing algo
+        else
+        {
+            // since all agents are full, we now proceed to give the client a queueNumber. This queueNumber will be
+            // requested by reposted under a new method that employs a lo
+
+            await swaggyDatabase.addToWaitQ(name, department, communication, problem,queueNumber,queueDropped);
+            let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+            return res.send({
+                queueNumber: queueNumber,
+                jid: null,
+                queueStatus: "enqueued",
+                position: queueNumber - currentlyServing + 1
+            });
+        }
+      }
+    } catch (e) {
+
+
+        return res.status(200).json({
+            message: "Some Issues With Getting Required CSA. Please try again.."
         })
     }
 });
