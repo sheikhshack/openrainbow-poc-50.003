@@ -56,6 +56,7 @@ router.post('/getRequiredCSA', async(req, res) => {
     let problem = req.body.problem;
     let queueDropped = req.body.queueDropped;
     let clientEmail = req.body.email;
+    let ticketNumber = req.body.ticketNumber;
 
     let allAgentsOffline = false;
 
@@ -71,7 +72,7 @@ router.post('/getRequiredCSA', async(req, res) => {
 
     // Continues routing as intended
     try{
-      
+
       let queueNumber = await swaggyDatabase.getAndSetDepartmentLatestActiveRequestNumber(department);
 
       if (queueNumber == null)
@@ -113,7 +114,7 @@ router.post('/getRequiredCSA', async(req, res) => {
 
       if (allAgentsOffline)
       {
-        await swaggyDatabase.logFailedRequest(department, clientEmail, communication, problem);
+        await swaggyDatabase.logFailedRequest(department, clientEmail, communication, problem, ticketNumber);
         await swaggyDatabase.incrementFailedRequests(department);
         await swaggyDatabase.decDepartmentLatestActiveRequestNumber(department);
         let botPolicy = await swaggyDatabase.retrieveBotPolicy();
@@ -409,6 +410,7 @@ router.post('/endChatInstance', async(req, res) => {
     let convoHistory = req.body.convoHistory;
     let clientEmail = req.body.clientEmail;
     let queueDropped = req.body.queueDropped;
+    let ticketNumber = req.body.ticketNumber;
 
     try {
       if (queueDropped)
@@ -425,7 +427,7 @@ router.post('/endChatInstance', async(req, res) => {
            status : "queueDropped"
          })
        }
-      let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication);
+      let resultOk = await swaggyDatabase.completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication, ticketNumber);
       let currentlyInRtc = await swaggyDatabase.currentlyInRtc(jidOfAgent);
       // console.log(currentlyInRtc);
       if (communication != "Chat") {

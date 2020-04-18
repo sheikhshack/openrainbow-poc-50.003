@@ -235,7 +235,7 @@ async function addPendingRequest(userEmail, departmentID, Enquiry){
         'userEmail' : userEmail,
         'Department_id' : departmentID,
         'Enquiry' : Enquiry,
-        'TimeStamp' : String(new Date())
+        'TimeStamp' : new Date()
 
     }, function(err, res) {
         if (err) throw err;
@@ -277,15 +277,15 @@ function parseLogs(conversation, communication) {
 /*
 Creates a Logging Document
 */
-async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation)
+async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation, ticketNumber)
 {
   // let finalObj = parseLogs(conversation, communication);
   await client.db(dbName).collection('Logging').insertOne({
+      "TicketNumber" : ticketNumber,
       "Department": department,
       "ClientEmail": clientEmail,
       "AgentJID": jidOfAgent,
-      "Status": true,
-      "TimeofLog": String(new Date()),
+      "TimeOfLog": new Date(),
       "TypeOfCommunication": communication,
       "ChatHistory": conversation,
       "UpdatedAt": new Date(Date.now()) })
@@ -368,7 +368,7 @@ async function decDepartmentLatestActiveRequestNumber(department)
  1. Add ticket.
 
  */
-async function completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication){
+async function completedARequest(jidOfAgent, department, convoHistory, clientEmail, communication, ticketNumber){
     let JSONObj = await client.db(dbName).collection('Agent').findOne(
         {'jid' : jidOfAgent},
         {projection : {
@@ -398,7 +398,7 @@ async function completedARequest(jidOfAgent, department, convoHistory, clientEma
             if (err) throw err;
         });
 
-    await populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, convoHistory)
+    await populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, convoHistory, ticketNumber);
     return true;
 }
 
@@ -666,14 +666,16 @@ async function incrementFailedRequests(department)
  */
 
 // This method adds a failedRequest event to the FailedRequests Collection
- async function logFailedRequest(department, clientEmail, communication, problem) {
+ async function logFailedRequest(department, clientEmail, communication, problem, ticketNumber) {
    await client.db(dbName).collection('FailedRequests').insertOne(
     {
+      'TicketNumber': ticketNumber,
       'Department' : department,
       'ClientEmail': clientEmail,
-      'Communication' : communication,
+      'TypeOfCommunication' : communication,
       'Problem' :  problem,
-      'Date' : String(new Date())
+       'AttendedTo': false,
+      'TimeOfLog' : new Date()
     })
  }
 
@@ -714,9 +716,9 @@ async function reset(){
 /*
 Deletes the entire Collection.
 */
-async function cleanUp(collection){
-  await client.db(dbName).collection(collection).deleteMany({})
-}
+// async function cleanUp(collection){
+//   await client.db(dbName).collection(collection).deleteMany({})
+// }
 
 
 
@@ -746,7 +748,7 @@ module.exports = {
     decDepartmentLatestActiveRequestNumber : decDepartmentLatestActiveRequestNumber,
     addDroppQEvent : addDroppQEvent,
     updateDropQHandler : updateDropQHandler,
-    cleanUp : cleanUp,
+    // cleanUp : cleanUp,
     incrementFailedRequests : incrementFailedRequests,
     retrieveBotPolicy: retrieveBotPolicy,
     getAndSetTicketNumber: getAndSetTicketNumber,

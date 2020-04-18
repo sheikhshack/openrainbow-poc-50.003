@@ -16,7 +16,7 @@ function init() {
 }
 async function createGuests(talkTime) {
         // I simplified the process with async-await because i lazy type
-        let result = await rainbowSDK.admin.createAnonymousGuestUser(talkTime);
+        let result = await rainbowSDK.admin.createAnonymousGuestUser(600);
         return {
             "loginID" : result.loginEmail,
             "loginPass" : result.password,
@@ -51,7 +51,7 @@ async function createGuestWithTokenization(){
 
 
 async function createGuestWithName(name, ticketID){
-    let result = await rainbowSDK.admin.createGuestUser(name, ticketID, "en-US", 3600);
+    let result = await rainbowSDK.admin.createGuestUser(name, ticketID, "en-US", 600);
     return {
         "loginID" : result.loginEmail,
         "loginPass" : result.password,

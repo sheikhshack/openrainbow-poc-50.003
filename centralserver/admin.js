@@ -9,7 +9,7 @@ const Agent = require('./mongoosemigrations/models/agentschema.js');
 const LogSessions = require('./mongoosemigrations/models/loggingschema.js');
 const Departments = require('./mongoosemigrations/models/departmentschema.js');
 const AdminPolicy = require('./mongoosemigrations/models/adminpolicy.js');
-
+const FailedLogging = require('./mongoosemigrations/models/failedloggingschema.js');
 
 // Customisations
 const options = {
@@ -45,6 +45,7 @@ const adminBro = new AdminBro({
         {resource: Agent, options: {parent: parentOfAgents}},
         {resource: Departments, options: {parent: parentOfDepartment}},
         {resource: LogSessions, options: {parent: parentOfLogging}},
+        {resource: FailedLogging, options: {parent: parentOfLogging}},
         {resource: AdminPolicy, options: {parent: parentofSuperuser}}
     ],
     branding: {
