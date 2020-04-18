@@ -102,6 +102,14 @@ router.get('/getTicketNumber', async (req, res) => {
     });
 });
 
+router.get('/retrieve', async (req, res) => {
+    let result = await rainbowMotherload.retriveListOfGuests();
+    return res.send({
+        status: "Successful",
+        summary: result
+    });
+});
+
 // WARNING!
 // deletes all documents in the collection
 router.post('/cleanUpSelectedCollection', async (req, res) => {

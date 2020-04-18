@@ -58,6 +58,11 @@ async function createGuestWithName(name, ticketID){
     }
 }
 
+async function retriveListOfGuests(){
+    let result = await rainbowSDK.admin.getAllUsers();
+    return result;
+}
+
 
 async function checkOnlineStatus(id){
     // uses the presence api
@@ -132,6 +137,7 @@ module.exports = {
     checkOnlineStatus: checkOnlineStatus,
     registerNewCSAAgent: registerNewCSAAgent,
     terminateExistingCSAAgent: terminateExistingCSAAgent,
+    retriveListOfGuests: retriveListOfGuests,
     overlord:rainbowSDK
 };
 
