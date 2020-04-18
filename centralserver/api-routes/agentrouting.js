@@ -406,7 +406,6 @@ router.post('/endChatInstance', async(req, res) => {
     let communication = req.body.communication;
     let queueNumber = req.body.queueNumber;
     let jidOfAgent = req.body.jid;
-    let conversationID = req.body.convoID;
     let convoHistory = req.body.convoHistory;
     let clientEmail = req.body.clientEmail;
     let queueDropped = req.body.queueDropped;

@@ -59,7 +59,7 @@ const adminBro = new AdminBro({
                 loginWelcome: "Welcome to Backend"
             },
             messages:{
-                loginWelcome: "Damn cancerous. Alcatel should pay us for this shit"
+                loginWelcome: "Swaggy Inc's all inclusive backend system. Do check it out with username: admin@swaggy.com and pasword: @Swaggy97"
             }}
 
     },
