@@ -432,6 +432,7 @@ router.post('/endChatInstance', async(req, res) => {
       if (communication != "Chat") {
         await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, jidOfAgent, currentlyInRtc);
       }
+      if (!resultOk) {throw "Failed"}
       console.log("ended convo is: ..... ");
       return res.send({
           status: "Success"

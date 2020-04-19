@@ -12,14 +12,15 @@ const dbName = "sutdproject";
 const client = new MongoClient(url,  {useUnifiedTopology: true});
 
 // Use connect method to connect to the Server
-client.connect( function(err, client) {
+client.connect(function(err, client) {
                     assert.equal(null, err);
                     console.log("Connected correctly to server");
                     const db = client.db(dbName);
 
                     console.log("Starting reset...")
                     reset();
-                    cleanUp("Logging");
+
+                    // cleanUp("Logging");
                     // resetQ();
                     console.log("System Wide reset has been compeleted")
 });
@@ -347,7 +348,7 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
 
 async function decDepartmentLatestActiveRequestNumber(department)
 {
-  await client.db(dbName).collection('Department').findOneAndUpdate(
+  await client.db(dbName).collection('Department').updateOne(
     {'_id' : department},
     {$inc : {'totalActiveRequests' : -1}})
 }
@@ -388,7 +389,7 @@ async function completedARequest(jidOfAgent, department, convoHistory, clientEma
 
     else { // means that <= 0
         console.log("ERROR : Current Active Session is = 0");
-
+        return false;
     }
 
     await client.db(dbName).collection('Department').updateOne(
@@ -413,15 +414,15 @@ async function addToWaitQ(name, department, communication, problem, queueNumber,
       "Qno": queueNumber,
       "queueDropped" : queueDropped
     }
-
-  let JSONObj =  await client.db(dbName).collection('Queues').findOne(
+  //
+  // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
+  //   {"Department" : department},
+  //   {projection: {'Queue' : 1}})
+  // let currentQ = JSONObj.Queue;
+  // currentQ.push(thisRequest);
+  await client.db(dbName).collection('Queues').update(
     {"Department" : department},
-    {projection: {'Queue' : 1}})
-  let currentQ = JSONObj.Queue;
-  currentQ.push(thisRequest);
-  await client.db(dbName).collection('Queues').findOneAndUpdate(
-    {"Department" : department},
-    {$set: {"Queue" : currentQ}})
+    {$push: {"Queue" : thisRequest}})
 }
 
 
@@ -497,8 +498,6 @@ async function splitWaitQ(department)
   await client.db(dbName).collection('Queues').findOneAndUpdate(
     {"Department" : department},
     {$set : {"ChatQ" : ChatQ, "OtherQ" : OtherQ}})
-  // console.log("Printing the ChatQ....", ChatQ);
-  // console.log("Printing the OtherQ....", OtherQ);
 }
 
 
@@ -653,7 +652,7 @@ async function addDroppQEvent(department, Qno)
 
 async function incrementFailedRequests(department)
 {
-  await client.db(dbName).collection('Department').findOneAndUpdate(
+  await client.db(dbName).collection('Department').updateOne(
     {"_id" :  department},
     {$inc: {'failedRequests' : 1}})
 }
