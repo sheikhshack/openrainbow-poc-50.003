@@ -7,6 +7,7 @@ describe('TEST: Agent Collection', () => {
 
 
          async function addAgent(_id, jid, name, typeOfComm, departmentID){
+
              await db.collection('Agent').insertOne({'_id' : _id,
                                                     'jid' : jid,
                                                     'Department_id' : departmentID,
@@ -14,7 +15,9 @@ describe('TEST: Agent Collection', () => {
                                                     'availability' : true,
                                                     'typeOfComm' : typeOfComm,
                                                     'currentActiveSessions' : 0,
-                                                    'reserve' : 3
+                                                    'reserve' : 3,
+                                                    'servicedToday' : 0,
+                                                    'currentlyInRtc' : false
                                                     }, function(err, res) {
                                                     if (err) throw err;
                                                     })
@@ -105,16 +108,27 @@ describe('TEST: Agent Collection', () => {
                                                     })
          }
 
-         async function updateWaitQ(department, index)
-         {
-           let currentQ = await getCurrentQ(department, "Main Queue");
-
-           currentQ.splice(index,1);
-
-           await db.collection('Queues').findOneAndUpdate(
-             {"Department" : department},
-             {$set: {"Queue" : currentQ}})
+         async function currentlyInRtc(agentJID){
+           let currentlyInRtc = await db.collection('Agent').findOne(
+             {'jid' : agentJID},
+             {projection: {'currentlyInRtc' : 1}})
+           return currentlyInRtc.currentlyInRtc
          }
+
+         async function updateAgentcurrentlyInRtcStatus(Department, agentJID, currentlyInRtc){
+           if (currentlyInRtc) {
+             await db.collection('Agent').updateOne(
+               {'jid' : agentJID},
+               {$set : {'currentlyInRtc' : false}})
+           }
+           else if (!currentlyInRtc) {
+             await db.collection('Agent').updateOne(
+               {'jid' : agentJID},
+               {$set : {'currentlyInRtc' : true}})
+           }
+         }
+
+
 
          beforeAll(async () => {
 
@@ -130,20 +144,24 @@ describe('TEST: Agent Collection', () => {
 
          afterAll(async () => {
                   await connection.close();
+
+
                   });
 
-         const mockAgent_One = {
-         '_id' : 'AAA',
+         const agent1 = {
+         '_id' : 'ASDASDS',
          'jid' : 'some-jid',
          'Department_id' : 'Graduate Office',
          'name' : 'Michael',
          'availability' : true,
          'typeOfComm' : ["Chat", "Audio"],
          'currentActiveSessions' : 0,
-         'reserve' : 3
+         'reserve' : 3,
+         'servicedToday' : 0,
+         'currentlyInRtc' : false
          };
 
-         const mockAgent_Two = {
+         const agent2 = {
          '_id' : 'AAB',
          'jid' : 'another_jid',
          'Department_id' : 'Music Office',
@@ -151,10 +169,12 @@ describe('TEST: Agent Collection', () => {
          'availability' : false,
          'typeOfComm' : ["Chat", "Video", "Audio"],
          'currentActiveSessions' : 0,
-         'reserve' : 3
+         'reserve' : 3,
+         'servicedToday' : 0,
+         'currentlyInRtc' : false
          };
 
-         const mockAgent_Three = {
+         const agent3 = {
          '_id' : 'AAC',
          'jid' : 'third-jid',
          'Department_id' : 'Graduate Office',
@@ -162,10 +182,12 @@ describe('TEST: Agent Collection', () => {
          'availability' : true,
          'typeOfComm' : ["Audio", "Video", "Chat"],
          'currentActiveSessions' : 0,
-         'reserve' : 3
+         'reserve' : 3,
+         'servicedToday' : 0,
+         'currentlyInRtc' : false
          };
 
-         const mockAgent_Four = {
+         const agent4 = {
          '_id' : 'AAD',
          'jid' : 'overloaded-jid',
          'Department_id' : 'Finance Office',
@@ -173,45 +195,48 @@ describe('TEST: Agent Collection', () => {
          'availability' : true,
          'typeOfComm' : ["Audio", "Video", "Chat"],
          'currentActiveSessions' : 3,
-         'reserve' : 3
+         'reserve' : 3,
+         'servicedToday' : 0,
+         'currentlyInRtc' : true
          };
 
 
          it('AGENT COLLECTION | addAgent(_id, jid, name, typeOfComm, departmentID)', async () => {
             const agent = db.collection('Agent');
-            await addAgent(mockAgent_One._id,mockAgent_One.jid,mockAgent_One.name,mockAgent_One.typeOfComm,mockAgent_One.Department_id)
+            await addAgent(agent1._id,agent1.jid,agent1.name,agent1.typeOfComm,agent1.Department_id)
 
-            const insertedAgent = await agent.findOne({'jid' : 'some-jid'});
-            //console.log(insertedAgent)
-            expect(insertedAgent).toStrictEqual(mockAgent_One);
+            const insertedAgent = await agent.findOne({'_id' : agent1._id});
+            expect(insertedAgent).toStrictEqual(agent1);
             });
 
 
          it('AGENT COLLECTION | checkRequestedAgents(departmentID, communication)', async() => {
             const agent = db.collection('Agent');
             // insert the 2nd agent.
-            await agent.insertOne(mockAgent_Three);
+            // await agent.insertOne(agent1);
+            await agent.insertOne(agent3);
             // function implementation
             let agentList = await checkRequestedAgents('Graduate Office', 'Chat');
-            let expected = [mockAgent_One,mockAgent_Three]
+            let expected = [agent1,agent3]
             expect(agentList).toStrictEqual(expected)
             })
 
          it('AGENT COLLECTION | modifyCommAndDept(typeOfComm, Department_id, newProperties)', async() => {
             const agent = db.collection('Agent');
-            await agent.insertOne(mockAgent_Four);
+            await agent.insertOne(agent4);
             let newProperties = {"typeOfComm" : ['Video','Audio','Chat']};
-            await modifyCommAndDept(mockAgent_Four.jid, newProperties)
-            const result = await agent.findOne({'jid' : 'overloaded-jid'},
+            await modifyCommAndDept(agent4.jid, newProperties)
+            const result = await agent.findOne({'jid' : agent4.jid},
                                                {projection: {'typeOfComm': 1}})
             expect(result.typeOfComm).toEqual(newProperties['typeOfComm'])
          })
 
          it('AGENT COLLECTION | incrementAgentSession(jid)', async() => {
             const agent = db.collection('Agent');
-            await incrementAgentSession(mockAgent_Three.jid);
+            // await agent.insertOne(agent3);
+            await incrementAgentSession(agent3.jid);
 
-            let result = await agent.findOne({'jid': mockAgent_Three.jid},
+            let result = await agent.findOne({'jid': agent3.jid},
                                              {projection:
                                              {'currentActiveSessions' : 1}})
             expect(result.currentActiveSessions).toBe(1)
@@ -220,8 +245,9 @@ describe('TEST: Agent Collection', () => {
 
          it('AGENT COLLECTION | incrementAgentSession(jid) - OVERLOAD AGENT', async() => {
             const agent = db.collection('Agent');
-            await incrementAgentSession(mockAgent_Four.jid);
-            let result = await agent.findOne({'jid': mockAgent_Four.jid},
+            // await agent.insertOne(agent4);
+            await incrementAgentSession(agent4.jid);
+            let result = await agent.findOne({'jid': agent4.jid},
                                              {projection:
                                              {'currentActiveSessions' : 1}})
             expect(result.currentActiveSessions).toBe(3);
@@ -229,10 +255,12 @@ describe('TEST: Agent Collection', () => {
 
          it('AGENT COLLECTION | checkAgentSession(jid)', async()=> {
             const agent = db.collection('Agent');
+            // await agent.insertOne(agent4);
+            // await agent.insertOne(agent1);
 
 
-            let agentSession_Pass = await checkAgentSession(mockAgent_One.jid);
-            let agentSession_Fail = await checkAgentSession(mockAgent_Four.jid);
+            let agentSession_Pass = await checkAgentSession(agent1.jid);
+            let agentSession_Fail = await checkAgentSession(agent4.jid);
 
             expect(agentSession_Pass).toBe(true)
             expect(agentSession_Fail).toBe(false)
@@ -242,15 +270,16 @@ describe('TEST: Agent Collection', () => {
          it('AGENT COLLECTION | toggleAvail(jid)', async() => {
             const agent = db.collection('Agent')
             // should print out "CSA agent is still unavailable. Please wait a while more"
-            agent.insertOne(mockAgent_Two)
-            await toggleAvail(mockAgent_Two.jid)
-            await toggleAvail(mockAgent_One.jid)
+            agent.insertOne(agent2)
+            // agent.insertOne(agent1)
+            await toggleAvail(agent2.jid)
+            await toggleAvail(agent1.jid)
 
-            let agentOne = await agent.findOne({'jid' : mockAgent_One.jid},
+            let agentOne = await agent.findOne({'jid' : agent1.jid},
                                          {projection:
                                          {'availability' : 1}})
 
-            let agentTwo = await agent.findOne({'jid' : mockAgent_Two.jid},
+            let agentTwo = await agent.findOne({'jid' : agent2.jid},
             {projection:
             {'availability' : 1}})
 
@@ -258,7 +287,20 @@ describe('TEST: Agent Collection', () => {
             expect(agentOne.availability).toBe(false)
             })
 
+          it('AGENT COLLECTION | currentlyInRtc(agentJID)', async() => {
+             const agent = db.collection('Agent')
+             // await agent.insertOne(agent4);
+             let status = await currentlyInRtc(agent4.jid)
+             expect(status).toBe(true);
+             })
 
+         it('AGENT COLLECTION | updateAgentcurrentlyInRtcStatus(Department, agentJID, currentlyInRtc)', async() => {
+            const agent = db.collection('Agent')
+            // await agent.insertOne(agent4);
+            await updateAgentcurrentlyInRtcStatus(agent4.Department_id, agent4.jid, agent4.currentlyInRtc)
+            let status = await currentlyInRtc(agent4.jid)
+            expect(status).toBe(false);
+            })
 
 
 });

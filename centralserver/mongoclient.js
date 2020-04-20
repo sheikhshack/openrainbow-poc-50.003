@@ -75,7 +75,9 @@ async function addAgent(_id, jid, name, typeOfComm, departmentID){
         'availability' : true,
         'typeOfComm' : typeOfComm,
         'currentActiveSessions' : 0,
-        'resrve' : 0
+        'resrve' : 0,
+        'servicedToday' : 0,
+        'currentlyInRtc' : false
     }, function(err, res) {
         if (err) throw err;
         console.log("Document inserted");
@@ -202,13 +204,11 @@ async function currentlyInRtc(agentJID){
 
 async function updateAgentcurrentlyInRtcStatus(Department, agentJID, currentlyInRtc){
   if (currentlyInRtc) {
-    console.log("Should i be here?")
     await client.db(dbName).collection('Agent').updateOne(
       {'jid' : agentJID},
       {$set : {'currentlyInRtc' : false}})
   }
   else if (!currentlyInRtc) {
-    console.log("Am i even here?")
     await client.db(dbName).collection('Agent').updateOne(
       {'jid' : agentJID},
       {$set : {'currentlyInRtc' : true}})
@@ -281,7 +281,6 @@ Creates a Logging Document
 async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation, ticketNumber)
 {
   // let finalObj = parseLogs(conversation, communication);
-    console.log("Ticket submitted is " + ticketNumber);
   await client.db(dbName).collection('Logging').insertOne({
       "TicketNumber" : ticketNumber,
       "Department": department,
@@ -289,7 +288,7 @@ async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, com
       "AgentJID": jidOfAgent,
       "TimeOfLog": new Date(),
       "TypeOfCommunication": communication,
-      "ChatHistory": JSON.stringify(conversation),
+      "ChatHistory": conversation,
       "UpdatedAt": new Date(Date.now()) })
 }
 
@@ -421,7 +420,7 @@ async function addToWaitQ(name, department, communication, problem, queueNumber,
   //   {projection: {'Queue' : 1}})
   // let currentQ = JSONObj.Queue;
   // currentQ.push(thisRequest);
-  await client.db(dbName).collection('Queues').update(
+  await client.db(dbName).collection('Queues').updateOne(
     {"Department" : department},
     {$push: {"Queue" : thisRequest}})
 }
@@ -469,6 +468,10 @@ async function updateDropQHandler(department) {
     {$set: {"DropQEventHandler" : currentQ}})
 }
 
+
+/*
+This method pops client at any index of the Main Queue
+*/
 async function updateWaitQ(department, index)
 {
   let currentQ = await getCurrentQ(department, "Main Queue");
@@ -560,7 +563,7 @@ async function incChatQServed(department)
 async function getQueueNumber(department, queueNumber)
 {
   let currentQ = await getCurrentQ(department, "Main Queue");
-  console.log("Curent QQQQQQQQ " , currentQ)
+
   let clientQno;
   for (var i = 0; i < currentQ.length; i++) {
     if (queueNumber == currentQ[i].Qno) {
@@ -643,7 +646,7 @@ async function addDroppQEvent(department, Qno)
   "Qno" : Qno,
   "DropQHandled" : false
   }
-  let DropQEventHandler = []
+  let DropQEventHandler = await getCurrentQ(department, "DropQEventHandler");
   DropQEventHandler.push(DropQClient)
   await client.db(dbName).collection('Queues').findOneAndUpdate(
     {"Department" :  department},
@@ -657,6 +660,43 @@ async function incrementFailedRequests(department)
     {"_id" :  department},
     {$inc: {'failedRequests' : 1}})
 }
+
+
+// async function testing(department, Qno)
+// {
+//   console.log(department)
+//   console.log(Qno)
+//   let selectedClient = await client.db(dbName).collection('TestCollection').findOne(
+//   {'Queue' : {$elemMatch : {Qno : Qno}}})
+//
+//
+//
+//   console.log(selectedClient)
+//
+//   return selectedClient.Qno;
+// }
+//
+//
+// async function sampleAddtoWaitQ(name, department, communication, problem, queueNumber, queueDropped)
+// {
+//   let thisRequest = {
+//       "Department": department,
+//       "Client": name,
+//       "Communication": communication,
+//       "Problem": problem,
+//       "Qno": queueNumber,
+//       "queueDropped" : queueDropped
+//     }
+//   //
+//   // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
+//   //   {"Department" : department},
+//   //   {projection: {'Queue' : 1}})
+//   // let currentQ = JSONObj.Queue;
+//   // currentQ.push(thisRequest);
+//   await client.db(dbName).collection('TestCollection').updateOne(
+//     {"Department" : department},
+//     {$push: {"Queue" : thisRequest}})
+// }
 
 
 /**
@@ -678,6 +718,7 @@ async function incrementFailedRequests(department)
       'TimeOfLog' : new Date()
     })
  }
+
 
 
 
@@ -713,12 +754,9 @@ async function reset(){
             }})
 }
 
-/*
-Deletes the entire Collection.
-*/
-async function cleanUp(collection){
-  await client.db(dbName).collection(collection).deleteMany({})
-}
+
+
+
 
 
 
@@ -748,11 +786,12 @@ module.exports = {
     decDepartmentLatestActiveRequestNumber : decDepartmentLatestActiveRequestNumber,
     addDroppQEvent : addDroppQEvent,
     updateDropQHandler : updateDropQHandler,
-    cleanUp : cleanUp,
     incrementFailedRequests : incrementFailedRequests,
     retrieveBotPolicy: retrieveBotPolicy,
     getAndSetTicketNumber: getAndSetTicketNumber,
     logFailedRequest : logFailedRequest,
     getQueueNumber :  getQueueNumber,
     reset : reset
+    // testing :testing,
+    // sampleAddtoWaitQ: sampleAddtoWaitQ
 };

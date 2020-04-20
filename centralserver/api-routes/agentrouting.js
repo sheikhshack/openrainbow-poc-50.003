@@ -5,8 +5,29 @@ const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
-const routerFunctions = require('./helperfunctions');
+// const routerFunctions = require('./helperfunctions');
 
+
+// router.post('/wait', async (req, res) => {
+//   let name = req.body.name
+//   let department = req.body.department
+//   let communication = req.body.communication
+//   let problem = req.body.problem
+//   let queueNumber = req.body.queueNumber
+//   let queueDropped = req.body.queueDropped
+//
+//
+//   await swaggyDatabase.sampleAddtoWaitQ(name, department, communication, problem, queueNumber, queueDropped)
+//   res.send("Completed")
+// })
+//
+// router.post('/testing', async (req, res) => {
+//   let department = req.body.department
+//   let Qno = req.body.Qno
+//
+//   let selectedClient =  await swaggyDatabase.testing(department, Qno);
+//   res.send({selectedClient})
+// })
 
 router.get('/createguest', async (req, res) => {
   try {
@@ -222,7 +243,7 @@ router.post('/getRequiredCSA', async(req, res) => {
       }
     } catch (e) {
 
-        console.log(e);
+        console.log(e)
         return res.status(200).json({
             message: "Some Issues With Getting Required CSA. Please try again.."
         })
@@ -304,7 +325,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                   queueNumber: queueNumber,
                   jid: listOfAgents[0].jid,
-                  queueStatus : "ready"
+                  queueStatus : "successful"
               });
           }
 
@@ -373,7 +394,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                 queueNumber : selectedClient.Qno,
                 jid : agentList[0].jid,
-                queueStatus : "ready"
+                queueStatus : "successful"
               })
             }
         }
@@ -410,7 +431,6 @@ router.post('/endChatInstance', async(req, res) => {
     let clientEmail = req.body.clientEmail;
     let queueDropped = req.body.queueDropped;
     let ticketNumber = req.body.ticketNumber;
-    console.log("Main ticket is at " + ticketNumber);
 
     try {
       if (queueDropped)
@@ -435,16 +455,11 @@ router.post('/endChatInstance', async(req, res) => {
       }
       if (!resultOk) {throw "Failed"}
       console.log("ended convo is: ..... ");
-      console.log("ended convo is: ..... ");
-      console.log("ended convo is: ..... ");
-      console.log("WAH FUCK ME");
-
-        return res.send({
+      return res.send({
           status: "Success"
       });
     }
     catch (e) {
-        console.log("WHY NOT ENDING ME");
       return res.status(400).json({
           message: "Failed to end Chat properly.."
       })}
