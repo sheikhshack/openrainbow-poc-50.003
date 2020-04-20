@@ -9,7 +9,7 @@ const failedLoggingSchema = mongoose.Schema({
     AttendedTo: {type: Boolean, required:true, default:false},
     TimeofLog: { type: Date },
     UpdatedAt: { type: Date, default: Date.now() },
-}, {collection: 'Logging'});
+}, {collection: 'FailedRequests'});
 
 // Update the updated_at field on save
 failedLoggingSchema.pre('save', (next) => {

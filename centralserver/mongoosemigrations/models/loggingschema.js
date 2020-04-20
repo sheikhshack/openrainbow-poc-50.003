@@ -8,8 +8,9 @@ const loggingSchema = mongoose.Schema({
     AgentJID: { type: String, required: true, validate: /@sandbox-all-in-one-rbx-prod-1.rainbow.sbg/ },
     TimeOfLog: { type: Date },
     TypeOfCommunication: { type: String, required:true , enum: ['Chat', 'Audio', 'Video']},
-    ChatHistory: {type: String},
     UpdatedAt: { type: Date, default: Date.now() },
+    ChatHistory: {type: String},
+
 }, {collection: 'Logging'});
 
 // Update the updated_at field on save
