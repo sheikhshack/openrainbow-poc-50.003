@@ -1,0 +1,3 @@
+POST https://localhost:3000/routing/getRequiredCSA
+Content-Type: application/json
+@gcsa.json

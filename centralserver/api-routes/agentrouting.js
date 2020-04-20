@@ -325,7 +325,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                   queueNumber: queueNumber,
                   jid: listOfAgents[0].jid,
-                  queueStatus : "successful"
+                  queueStatus : "ready"
               });
           }
 
@@ -394,7 +394,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                 queueNumber : selectedClient.Qno,
                 jid : agentList[0].jid,
-                queueStatus : "successful"
+                queueStatus : "ready"
               })
             }
         }

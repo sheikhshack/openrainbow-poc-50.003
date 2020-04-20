@@ -68,7 +68,7 @@ async function checkOnlineStatus(id){
     // uses the presence api
     let result = await rainbowSDK.contacts.getContactByJid(id);
 
-    if (result.presence === "online"){
+    if (result.presence === "online" || result.presence === "busy"){
         return true;
     }
     return false;

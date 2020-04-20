@@ -1,0 +1,3 @@
+POST https://localhost:3000/routing/endChatInstance
+Content-Type: application/json
+@eci.json

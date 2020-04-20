@@ -1,0 +1,17 @@
+{
+  "department":"Rich Lad Office",
+  "communication":"Chat","queueNumber":0,
+  "jid":"77d67a7492964a719a82718c76ba49a4@sandbox-all-in-one-rbx-prod-1.rainbow.sbg",
+  "convoHistory":
+  {
+    "0":{"user":"I got a big big problem"},
+    "1":{"user":"I got a big big problem I got a big big problem I got a big big problem I got a big big problem I got a big big problem I got a big big problem"},
+    "2":{"user":"I got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problem"},
+    "3":{"agent":"I got a big big solution"},
+    "4":{"agent":"I got a big big solution"},
+    "5":{"agent":"I got a big big solution"},
+    "6":{"agent":"I got a big big solution"},
+    "7":{"user":"hello"}
+  },
+  "clientEmail":"sen_test@gmail.com","queueDropped":false, "ticketNumber":20202
+}

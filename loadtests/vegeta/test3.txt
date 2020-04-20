@@ -1,0 +1,3 @@
+POST https://localhost:3000/routing/checkQueueStatus
+Content-Type: application/json
+@cqs.json
