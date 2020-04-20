@@ -5,6 +5,7 @@ const rainbowMotherload = require('../rainbowShake');
 const swaggyDatabase = require('../mongoclient');
 const express = require('express');
 const router = express.Router();
+
 // const routerFunctions = require('./helperfunctions');
 
 
@@ -261,156 +262,169 @@ router.post('/checkQueueStatus', async(req, res) => {
     //console.log(department);
     console.log("This is my queue Number : ", queueNumber);
     //console.log(queueNumber);
+    let alreadyServed = false;
+
     let currentlyInRtc;
+
     try {
       let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
       console.log("The department is now currently serving :", currentlyServing);
-      let myturn = queueNumber < currentlyServing;
-      let handlingDropQ = false;
 
-      let DropQEventHandler = await swaggyDatabase.getCurrentQ(department, "DropQEventHandler");
-      console.log("This is the dropQeventhandler object ", DropQEventHandler)
-      if (DropQEventHandler.length != 0) {
-      if (queueNumber == currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
-        {
-          // increase Dpt. Current Q Number.
-          await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-          handlingDropQ = true;
+      // handle alreadyServed requests
+      if (currentlyServing - queueNumber >= 1 ) {alreadyServed = true;}
+
+      if (alreadyServed) {
+        res.send("You have already been served.")
+      }
+
+      else {
+        console.log("asdlfjkhbasduyfgaisduyfidsa")
+        let myturn = queueNumber < currentlyServing;
+        let handlingDropQ = false;
+
+        let DropQEventHandler = await swaggyDatabase.getCurrentQ(department, "DropQEventHandler");
+        console.log("This is the dropQeventhandler object ", DropQEventHandler)
+        if (DropQEventHandler.length != 0) {
+        if (queueNumber == currentlyServing && DropQEventHandler[0].Qno == (queueNumber - 1) && DropQEventHandler[0].DroppedQHandled == false)
+          {
+            // increase Dpt. Current Q Number.
+            await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+            handlingDropQ = true;
+          }
         }
-      }
-      console.log("This is the handlingDropQ status " , handlingDropQ);
-      // updates the DropQEventHandler
-      if (handlingDropQ)
-      { // check the queue
-        await swaggyDatabase.updateDropQHandler(department);
-      }
+        console.log("This is the handlingDropQ status " , handlingDropQ);
+        // updates the DropQEventHandler
+        if (handlingDropQ)
+        { // check the queue
+          await swaggyDatabase.updateDropQHandler(department);
+        }
 
-      // get updated instance of Dpt Q No
-      currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
-      if (myturn) // Single Queue System.
-      {
-          console.log(queueNumber);
-          console.log(currentlyServing);
-          let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
-          console.log(listOfAgents);
+        // get updated instance of Dpt Q No
+        currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
+        if (myturn) // Single Queue System.
+        {
+            console.log(queueNumber);
+            console.log(currentlyServing);
+            let listOfAgents = await swaggyDatabase.checkRequestedAgents(department, communication);
+            console.log(listOfAgents);
 
-          // by the end of this sequence, you should get a listofagents that are online and not overloaded
-          for (var i = listOfAgents.length-1; i >= 0; i--){
-              let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
-              let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
-              currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
-              console.log(onlineStatus);
-              console.log(overLoadedStatus);
-              if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
-              else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
-                  listOfAgents.splice(i, 1);
-              }
-          }
-          console.log("this is the list of agents..")
-          console.log(listOfAgents);
+            // by the end of this sequence, you should get a listofagents that are online and not overloaded
+            for (var i = listOfAgents.length-1; i >= 0; i--){
+                let onlineStatus = await rainbowMotherload.checkOnlineStatus(listOfAgents[i].jid);
+                let overLoadedStatus = await swaggyDatabase.checkAgentSession(listOfAgents[i].jid);
+                currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
+                console.log(onlineStatus);
+                console.log(overLoadedStatus);
+                if (communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+                else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
+                    listOfAgents.splice(i, 1);
+                }
+            }
+            console.log("this is the list of agents..")
+            console.log(listOfAgents);
 
 
-          // final check that the right agent is online and return it to client for immediate connection
-          if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
-              console.log("Am i in here thennnnnn?")
-              if (communication == "Video" || communication == "Audio") {
-                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
-              }
-              await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-              await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
-              await swaggyDatabase.updateWaitQ(department, 0);
-              await swaggyDatabase.updateOtherQ(department);
-              await swaggyDatabase.updateChatQ(department);
-              // sends the JID, queueNumber also sent for Debugging
+            // final check that the right agent is online and return it to client for immediate connection
+            if (listOfAgents.length != 0 && await rainbowMotherload.checkOnlineStatus(listOfAgents[0].jid)){
+                console.log("Am i in here thennnnnn?")
+                if (communication == "Video" || communication == "Audio") {
+                  await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, listOfAgents[0].jid, currentlyInRtc);
+                }
+                await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                await swaggyDatabase.incrementAgentSession(listOfAgents[0].jid);
+                await swaggyDatabase.updateWaitQ(department, 0);
+                await swaggyDatabase.updateOtherQ(department);
+                await swaggyDatabase.updateChatQ(department);
+                // sends the JID, queueNumber also sent for Debugging
+                return res.send({
+                    queueNumber: queueNumber,
+                    jid: listOfAgents[0].jid,
+                    queueStatus : "successful"
+                });
+            }
+
+            else if (listOfAgents.length == 0) { // enter this if client is the head of the wait Q and !chat.
+              let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
               return res.send({
-                  queueNumber: queueNumber,
-                  jid: listOfAgents[0].jid,
-                  queueStatus : "ready"
-              });
+                queueNumber: queueNumber,
+                jid: null,
+                position: clientQno,
+                queueStatus : "enqueued"
+              })
+            }
           }
 
-          else if (listOfAgents.length == 0) { // enter this if client is the head of the wait Q and !chat.
-            let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
-            return res.send({
+          else if (queueNumber == currentlyServing)  // next in line.
+            {
+              await swaggyDatabase.splitWaitQ(department);
+              let currentQ = await swaggyDatabase.getCurrentQ(department, "Main Queue");
+              let ChatQ = await swaggyDatabase.getCurrentQ(department, "ChatQ");
+              let OtherQ = await swaggyDatabase.getCurrentQ(department, "OtherQ");
+              let selectedClient = await swaggyDatabase.clientPicker(department); // picks chat for every 2 Chat served
+              console.log("Selected Client is : ", selectedClient);
+              // if (selectedClient.Communication == "Chat")  { // if chat.
+
+              let agentList = await swaggyDatabase.checkRequestedAgents(selectedClient.Department, selectedClient.Communication);
+              console.log("agentList before anything is done :" , agentList);
+              for (var i = agentList.length-1; i >= 0; i--){
+                  let onlineStatus = await rainbowMotherload.checkOnlineStatus(agentList[i].jid);
+                  let overLoadedStatus = await swaggyDatabase.checkAgentSession(agentList[i].jid);
+                  currentlyInRtc = await swaggyDatabase.currentlyInRtc(agentList[i].jid)
+                  console.log(onlineStatus);
+                  console.log(overLoadedStatus);
+                  if (selectedClient.Communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
+                  else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
+                      agentList.splice(i, 1);
+                  }
+              }
+              console.log("Printing the agentList! ", agentList);
+
+              if (agentList.length == 0) {
+                let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
+                console.log("This is the clientQno " , clientQno)
+                return res.send({
+                    queueNumber: queueNumber,
+                    jid: null,
+                    position: clientQno,
+                    queueStatus : "enqueued"
+                })
+              }
+
+              else if (agentList.length!=0 && await rainbowMotherload.checkOnlineStatus(agentList[0].jid)) {
+                if (selectedClient.Communication == "Chat") {
+                  await swaggyDatabase.updateChatQ(ChatQ[0].Department);
+                  await swaggyDatabase.updateWaitQ(currentQ[1].Department,1);
+                  await swaggyDatabase.incChatQServed(selectedClient.Department);
+                }
+                else if (selectedClient.Communication == "Video" || selectedClient.Communication == "Audio") {
+                  currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
+                  await swaggyDatabase.updateOtherQ(OtherQ[0].Department);
+                  await swaggyDatabase.updateWaitQ(currentQ[0].Department,1);
+                  await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, agentList[0].jid, currentlyInRtc);
+                }
+                await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
+                await swaggyDatabase.incrementAgentSession(agentList[0].jid);
+
+                return res.send({
+                  queueNumber : selectedClient.Qno,
+                  jid : agentList[0].jid,
+                  queueStatus : "successful"
+                })
+              }
+          }
+
+
+        else { // not my turn.
+          let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
+          console.log("Not your turn");
+          return res.send({
               queueNumber: queueNumber,
               jid: null,
               position: clientQno,
               queueStatus : "enqueued"
-            })
-          }
+          })
         }
-
-        else if (queueNumber == currentlyServing)  // next in line.
-          {
-            await swaggyDatabase.splitWaitQ(department);
-            let currentQ = await swaggyDatabase.getCurrentQ(department, "Main Queue");
-            let ChatQ = await swaggyDatabase.getCurrentQ(department, "ChatQ");
-            let OtherQ = await swaggyDatabase.getCurrentQ(department, "OtherQ");
-            let selectedClient = await swaggyDatabase.clientPicker(department); // picks chat for every 2 Chat served
-            console.log("Selected Client is : ", selectedClient);
-            // if (selectedClient.Communication == "Chat")  { // if chat.
-
-            let agentList = await swaggyDatabase.checkRequestedAgents(selectedClient.Department, selectedClient.Communication);
-            console.log("agentList before anything is done :" , agentList);
-            for (var i = agentList.length-1; i >= 0; i--){
-                let onlineStatus = await rainbowMotherload.checkOnlineStatus(agentList[i].jid);
-                let overLoadedStatus = await swaggyDatabase.checkAgentSession(agentList[i].jid);
-                currentlyInRtc = await swaggyDatabase.currentlyInRtc(agentList[i].jid)
-                console.log(onlineStatus);
-                console.log(overLoadedStatus);
-                if (selectedClient.Communication == "Chat" && currentlyInRtc && overLoadedStatus && onlineStatus){}
-                else if (!onlineStatus || !overLoadedStatus || currentlyInRtc){
-                    agentList.splice(i, 1);
-                }
-            }
-            console.log("Printing the agentList! ", agentList);
-
-            if (agentList.length == 0) {
-              let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
-              console.log("This is the clientQno " , clientQno)
-              return res.send({
-                  queueNumber: queueNumber,
-                  jid: null,
-                  position: clientQno,
-                  queueStatus : "enqueued"
-              })
-            }
-
-            else if (agentList.length!=0 && await rainbowMotherload.checkOnlineStatus(agentList[0].jid)) {
-              if (selectedClient.Communication == "Chat") {
-                await swaggyDatabase.updateChatQ(ChatQ[0].Department);
-                await swaggyDatabase.updateWaitQ(currentQ[1].Department,1);
-                await swaggyDatabase.incChatQServed(selectedClient.Department);
-              }
-              else if (selectedClient.Communication == "Video" || selectedClient.Communication == "Audio") {
-                currentlyInRtc = await swaggyDatabase.currentlyInRtc(listOfAgents[i].jid)
-                await swaggyDatabase.updateOtherQ(OtherQ[0].Department);
-                await swaggyDatabase.updateWaitQ(currentQ[0].Department,1);
-                await swaggyDatabase.updateAgentcurrentlyInRtcStatus(department, agentList[0].jid, currentlyInRtc);
-              }
-              // await swaggyDatabase.incrementDepartmentCurrentQueueNumber(department);
-              await swaggyDatabase.incrementAgentSession(agentList[0].jid);
-
-              return res.send({
-                queueNumber : selectedClient.Qno,
-                jid : agentList[0].jid,
-                queueStatus : "ready"
-              })
-            }
-        }
-
-
-      else { // not my turn.
-        let clientQno = await swaggyDatabase.getQueueNumber(department, queueNumber);
-        console.log("Not your turn");
-        return res.send({
-            queueNumber: queueNumber,
-            jid: null,
-            position: clientQno,
-            queueStatus : "enqueued"
-        })
       }
-
     } catch (e)
     {
         return res.status(400).json({

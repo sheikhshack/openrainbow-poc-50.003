@@ -2,6 +2,10 @@
 const bodyParser = require("body-parser");
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
+var Mutex = require('async-mutex').Mutex;
+const mutex = new Mutex();
+
+
 
 // Connection URL
 const url = 'mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/test?retryWrites=true&w=majority';
@@ -19,6 +23,9 @@ client.connect(function(err, client) {
 
                     console.log("Starting reset...")
                     reset();
+
+                    // const mutex = new Mutex();
+
 
                     // cleanUp("Logging");
                     // resetQ();
@@ -112,35 +119,42 @@ IncrementAgentSession("testJID")
  */
 async function incrementAgentSession(jid) {
     // returns a document that supports JSON format.
-    let JSONObj = await client.db(dbName).collection('Agent').findOne(
-        {'jid' : jid},
-        {projection : {
-                'currentActiveSessions' : 1 ,
-                'reserve' : 1
-            }});
-    if (JSONObj == null) {
-        console.log("Wrong JID input");
-        return false;
+    const release = await mutex.acquire();
 
-    }
-    if (JSONObj.currentActiveSessions < JSONObj.reserve ) {
-        // increment by currentActiveSessions by 1
-        let newActiveSession = JSONObj.currentActiveSessions +=1;
-        console.log(newActiveSession);
+    try {
+
+      let JSONObj = await client.db(dbName).collection('Agent').findOne(
+          {'jid' : jid},
+          {projection : {
+                  'currentActiveSessions' : 1 ,
+                  'reserve' : 1
+              }});
+      if (JSONObj == null) {
+          console.log("Wrong JID input");
+          return false;
+
+      }
+      if (JSONObj.currentActiveSessions < JSONObj.reserve ) {
+          // increment by currentActiveSessions by 1
+          let newActiveSession = JSONObj.currentActiveSessions +=1;
+          console.log(newActiveSession);
 
 
-        await client.db(dbName).collection('Agent').updateOne(
-            {'jid' : jid},
-            {$set: {'currentActiveSessions' : newActiveSession}},
-            function(err, res) {
-                if (err) throw err;
-                console.log("Number of Session has been incremented.");
-                return true;
-            })
-    }
-    else {
-        console.log("Please wait. Current CSA is working at maximum capacity");
-        return false;
+          await client.db(dbName).collection('Agent').updateOne(
+              {'jid' : jid},
+              {$set: {'currentActiveSessions' : newActiveSession}},
+              function(err, res) {
+                  if (err) throw err;
+                  console.log("Number of Session has been incremented.");
+                  return true;
+              })
+      }
+      else {
+          console.log("Please wait. Current CSA is working at maximum capacity");
+          return false;
+      }
+    } finally {
+      release();
     }
 }
 

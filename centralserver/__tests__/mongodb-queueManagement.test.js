@@ -134,11 +134,12 @@ describe('TEST: QUEUE MANAGEMENT', () => {
 
          beforeAll(async () => {
 
-                   connection = await MongoClient.connect(process.env.MONGO_URL, {
-                                                          useNewUrlParser: true,
-                                                          useUnifiedTopology: true
-                                                          });
-                   db = await connection.db();
+           connection = await MongoClient.connect(global.__MONGO_URI__, {
+                                                  useNewUrlParser: true,
+                                                  useUnifiedTopology: true
+                                                  });
+                  db = await connection.db(global.__MONGO_DB_NAME__);
+                   // db = await connection.db();
                    await db.collection('Agent').deleteMany({});
                    await db.collection('Department').deleteMany({});
                    await db.collection('PendingRequests').deleteMany({});
@@ -149,33 +150,10 @@ describe('TEST: QUEUE MANAGEMENT', () => {
 
          afterAll(async () => {
                   await connection.close();
+                  // await db.close();
 
                   });
 
-        // it('QUEUE | reset', async() => {
-        //   const Dpt = db.collection("Department");
-        //   const agent = db.collection('Agent');
-        //   await Dpt.insertOne(dpt1);
-        //   await Dpt.insertOne(dpt2);
-        //   await agent.insertOne(agents1);
-        //   await reset();
-        //   let abc = await Dpt.findOne(
-        //     {"Department" : "General Enquiry"},
-        //     {$projection : {}}
-        //   )
-        //
-        //   console.log(abc)
-        //   let dpt2_ = await Dpt.findOne(
-        //     {'Department' : "Graduate Office"}
-        //   )
-        //   let agents = await agent.findOne(
-        //     {'_id' : "ABA Enquiry"}
-        //   )
-        //   expect(abc).toBe(dpt1);
-        //   expect(dpt2_).toBe(dpt2);
-        //   expect(agents).toBe(agents1);
-        //
-        // })
 
 
          it('QUEUE | getDepartmentCurrentQueueNumber(departmentID)', async()=> {

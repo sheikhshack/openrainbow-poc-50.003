@@ -217,11 +217,11 @@ describe('TEST: QUEUES COLLECTION', () => {
   }
 
   beforeAll(async () => {
-            connection = await MongoClient.connect(process.env.MONGO_URL, {
-                                                   useNewUrlParser: true,
-                                                   useUnifiedTopology: true
-                                                   });
-            db = await connection.db();
+            connection = await MongoClient.connect(global.__MONGO_URI__, {
+                                           useNewUrlParser: true,
+                                           useUnifiedTopology: true
+                                           });
+           db = await connection.db(global.__MONGO_DB_NAME__);
             await db.collection('PendingRequests').deleteMany({});
             await db.collection('Agent').deleteMany({});
             await db.collection('Department').deleteMany({});
@@ -238,7 +238,7 @@ describe('TEST: QUEUES COLLECTION', () => {
 
   afterAll(async () => {
            await connection.close();
-
+           // await db.close();
 
            });
 

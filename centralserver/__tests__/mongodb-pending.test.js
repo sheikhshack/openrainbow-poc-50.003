@@ -20,7 +20,9 @@ describe('TEST: Pending Collection', () => {
                                                           useNewUrlParser: true,
                                                           useUnifiedTopology: true
                                                           });
-                   db = await connection.db();
+                    db = await connection.db(global.__MONGO_DB_NAME__);
+
+                   // db = await connection.db();
                    await db.collection('PendingRequests').deleteMany({});
                    await db.collection('Agent').deleteMany({});
                    await db.collection('Department').deleteMany({});
@@ -28,6 +30,8 @@ describe('TEST: Pending Collection', () => {
 
          afterAll(async () => {
                   await connection.close();
+                  // await db.close();
+
                   });
 
          const mockClient_One = {

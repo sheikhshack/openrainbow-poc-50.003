@@ -35,7 +35,9 @@ describe('TEST : FAILED REQUETS', () => {
                                                    useNewUrlParser: true,
                                                    useUnifiedTopology: true
                                                    });
-            db = await connection.db();
+             db = await connection.db(global.__MONGO_DB_NAME__);
+
+            // db = await connection.db();
             await db.collection('Agent').deleteMany({});
             await db.collection('Department').deleteMany({});
             await db.collection('AdminPolicy').deleteMany({});
@@ -44,6 +46,7 @@ describe('TEST : FAILED REQUETS', () => {
 
   afterAll(async () => {
            await connection.close();
+           // await db.close();
 
            });
 

@@ -1,11 +1,15 @@
 {
   "name": "centralserver",
   "version": "1.0.0",
+  "jest": {
+    "verbose": true
+  },
   "dependencies": {
     "@shelf/jest-mongodb": "^1.1.5",
     "admin-bro": "^2.2.4",
     "admin-bro-expressjs": "^2.0.1",
     "admin-bro-mongoose": "^0.5.0",
+    "async-mutex": "^0.2.2",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -31,6 +35,6 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "jest"
+    "test": "jest --runInBand"
   }
 }
