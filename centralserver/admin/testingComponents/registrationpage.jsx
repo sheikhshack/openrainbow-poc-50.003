@@ -107,9 +107,10 @@ const SomeStats = ({ addNotice }) => {
         ).then(response => {
             console.log(response);
         })
-            .catch(error => {
-                console.log(error);
-            })
+        .catch(error => {
+            console.log(error);
+            alert("User doesnt exist");
+        });
         alert(`Removed Name ${firstName} ${lastName}`);
         resetRemoveID();
     };

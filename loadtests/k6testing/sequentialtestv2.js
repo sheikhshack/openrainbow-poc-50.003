@@ -31,16 +31,19 @@ const thirdFailRate = new Rate('failed API response for (3)');
 const fourthFailRate = new Rate('failed API response for (4)');
 
 export let options = {
-    vus: 50,  // 1 user looping for 1 minute
-    duration: '50s',
-
+    stages: [
+        { duration: '10s', target: 4 },
+        { duration: '50s', target: 4 },
+        { duration: '2m', target: 4 },
+        { duration: '1m', target: 0 },
+    ],
     thresholds: {
 
-            // 'failed API response for (1)': ['rate<0.1'],
-            // 'failed API response for (2)': ['rate<0.1'],
-            // 'failed API response for (3)': ['rate<0.1'],
-            // 'failed API response for (4)': ['rate<0.1'],
-            'http_req_duration': ['p(95)<4000']
+        // 'failed API response for (1)': ['rate<0.1'],
+        // 'failed API response for (2)': ['rate<0.1'],
+        // 'failed API response for (3)': ['rate<0.1'],
+        // 'failed API response for (4)': ['rate<0.1'],
+        'http_req_duration': ['p(95)<4000']
 
     },
     insecureSkipTLSVerify: true,
@@ -49,11 +52,12 @@ export let options = {
 // VU is like a thread/user
 
 
-export function setup() {
-    // first allocated a name to each VU
+
+export default function() {
+    let initalFlag = false;
     let fname = faker.name.firstName();
-    console.log(fname);
     let fsentence = faker.lorem.sentence();
+    let fmail = faker.internet.email();
     let res = http.get('https://localhost:3000/routing/createguestdynamic/?name=' + fname);
 
 
@@ -64,17 +68,15 @@ export function setup() {
         communication: "Chat",
         problem: fsentence,
         queueDropped : false,
+        email: fmail,
         ticketNumber: ticketNumber
     });
 
     let res2 = http.post('https://localhost:3000/routing/getRequiredCSA/', bodySetup, params);
 
-    return { data: {ticketNumber: ticketNumber, queueStatus: res2.json().queueStatus, queueNumber: res2.json().queueNumber, jid: res2.json().jid } };
-}
 
-export default function(data) {
 
-    if (data.queueStatus === "ready") {
+    if (res2.json().queueStatus === "ready") {
         /**
          * enters sleep for 5000ms (simulate 1 message) then proceeds to terminate chat
          */
@@ -82,8 +84,53 @@ export default function(data) {
             clientEmail: faker.internet.email(),
             department: "Rich Lad Office",
             communication: "Chat",
-            queueNumber: data.queueNumber,
-            jid: data.jid,
+            queueNumber: res2.json().queueNumber,
+            jid: res2.json().jid,
+            queueDropped: false,
+            convoHistory: {
+                "0":{"user":"I got a big big problem"},
+                "1":{"user":"I got a big big problem I got a big big problem I got a big big problem I got a big big problem I got a big big problem I got a big big problem"},
+                "2":{"user":"I got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problemI got a big big problem"},
+                "3":{"agent":"I got a big big solution"},
+                "4":{"agent":"I got a big big solution"},
+                "5":{"agent":"I got a big big solution"},
+                "6":{"agent":"I got a big big solution"},
+                "7":{"user":"hello"}
+            },
+            ticketNumber: res.json().ticketNumber
+        });
+
+        let resEnds = http.post('https://localhost:3000/routing/endChatInstance/', bodyEnd, params);
+        console.log(JSON.stringify(resEnds));
+        sleep(500000);
+        console.log("Successful Ending");
+    }
+    if (res2.json().queueStatus === "enqueued"){
+        let bodyRequest = JSON.stringify({
+            department: "Rich Lad Office",
+            communication: 'Chat',
+            queueNumber: res2.json().queueNumber
+        });
+
+        let jidRetrieved;
+        let queueNumberRetrieved;
+        while (!initalFlag) {
+            let res3 = http.post('https://localhost:3000/routing/checkQueueStatus/', bodyRequest, params);
+            sleep(1000);
+            console.log(JSON.stringify(res3.json()));
+            if (res3.json().queueStatus === "ready") {
+                initalFlag = true;
+                jidRetrieved = res3.json().jid;
+                queueNumberRetrieved = res3.json().queueNumber;
+                console.log(JSON.stringify(res3.json()));
+            }
+        }
+        let bodyEnder = JSON.stringify({
+            clientEmail: faker.internet.email(),
+            department: "Rich Lad Office",
+            communication: "Chat",
+            queueNumber: queueNumberRetrieved,
+            jid: jidRetrieved,
             queueDropped: false,
             convoHistory: {
                 "0": {"user": faker.lorem.sentence()},
@@ -91,56 +138,18 @@ export default function(data) {
                 "2": {"user": faker.lorem.sentence()},
                 "3": {"agent": faker.lorem.sentence()},
             },
-            ticketNumber: data.ticketNumber
+            ticketNumber: res.json().ticketNumber
         });
 
         sleep(5000);
-        let resEnds = http.post('https://localhost:3000/routing/endChatInstance/', bodyEnd, params);
-        sleep(500000);
+        let resEnds = http.post('https://localhost:3000/routing/endChatInstance/', bodyEnder, params);
+        console.log(JSON.stringify(resEnds.json()));
+        sleep(50000);
     }
 
-
-    let bodyRequest = JSON.stringify({
-        department: "Rich Lad Office",
-        communication: 'Chat',
-        queueNumber: data.queueNumber
-    });
-    let initalFlag = 0;
-    while (initalFlag === 0) {
-        let res3 = http.post('https://localhost:3000/routing/getRequiredCSA/', bodyRequest, params);
-        if (res3.json().queueStatus !== "ready") {
-            initalFlag = 1;
-            data.jid = res3.json().jid;
-            sleep(500);
-        }
-    }
-
-    let bodyEnder = JSON.stringify({
-        clientEmail: faker.internet.email(),
-        department: "Rich Lad Office",
-        communication: "Chat",
-        queueNumber: data.queueNumber,
-        jid: data.jid,
-        queueDropped: false,
-        convoHistory: {
-            "0": {"user": faker.lorem.sentence()},
-            "1": {"user": faker.lorem.sentence()},
-            "2": {"user": faker.lorem.sentence()},
-            "3": {"agent": faker.lorem.sentence()},
-        },
-        ticketNumber: data.ticketNumber
-    });
-
-    sleep(5000);
-    let resEnds = http.post('https://localhost:3000/routing/endChatInstance/', bodyEnder, params);
-    console.log(JSON.stringify(resEnds.json()));
-    sleep(50000);
 
 
 }
 
-export function teardown(data) {
-    console.log(JSON.stringify(data));
-}
 
 

@@ -281,6 +281,7 @@ Creates a Logging Document
 async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, communication, conversation, ticketNumber)
 {
   // let finalObj = parseLogs(conversation, communication);
+    console.log("Ticket submitted is " + ticketNumber);
   await client.db(dbName).collection('Logging').insertOne({
       "TicketNumber" : ticketNumber,
       "Department": department,
@@ -288,7 +289,7 @@ async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, com
       "AgentJID": jidOfAgent,
       "TimeOfLog": new Date(),
       "TypeOfCommunication": communication,
-      "ChatHistory": conversation,
+      "ChatHistory": JSON.stringify(conversation),
       "UpdatedAt": new Date(Date.now()) })
 }
 
@@ -715,9 +716,9 @@ async function reset(){
 /*
 Deletes the entire Collection.
 */
-// async function cleanUp(collection){
-//   await client.db(dbName).collection(collection).deleteMany({})
-// }
+async function cleanUp(collection){
+  await client.db(dbName).collection(collection).deleteMany({})
+}
 
 
 
@@ -747,7 +748,7 @@ module.exports = {
     decDepartmentLatestActiveRequestNumber : decDepartmentLatestActiveRequestNumber,
     addDroppQEvent : addDroppQEvent,
     updateDropQHandler : updateDropQHandler,
-    // cleanUp : cleanUp,
+    cleanUp : cleanUp,
     incrementFailedRequests : incrementFailedRequests,
     retrieveBotPolicy: retrieveBotPolicy,
     getAndSetTicketNumber: getAndSetTicketNumber,

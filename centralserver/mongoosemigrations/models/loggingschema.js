@@ -1,14 +1,14 @@
+
 const mongoose = require('mongoose');
 
 const loggingSchema = mongoose.Schema({
     TicketNumber:{type: Number},
     Department: { type: String, required: true },
-    ClientEmail: { type: String, required: true },
-    AgentJID: { type: String, required: true },
-    Status: { type: Boolean },
-    TimeofLog: { type: Date },
+    ClientEmail: { type: String, required: true , validate: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/},
+    AgentJID: { type: String, required: true, validate: /@sandbox-all-in-one-rbx-prod-1.rainbow.sbg/ },
+    TimeOfLog: { type: Date },
     TypeOfCommunication: { type: String, required:true , enum: ['Chat', 'Audio', 'Video']},
-    ChatHistory: { type: Object },
+    ChatHistory: {type: String},
     UpdatedAt: { type: Date, default: Date.now() },
 }, {collection: 'Logging'});
 

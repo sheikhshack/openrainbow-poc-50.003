@@ -113,6 +113,7 @@ router.get('/retrieve', async (req, res) => {
 // WARNING!
 // deletes all documents in the collection
 router.post('/cleanUpSelectedCollection', async (req, res) => {
+    console.log("Defcon clearing")
   let collection = req.body.collection;
   try {
     await swaggyDatabase.cleanUp(collection);

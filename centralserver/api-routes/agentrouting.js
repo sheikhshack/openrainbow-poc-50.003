@@ -222,7 +222,7 @@ router.post('/getRequiredCSA', async(req, res) => {
       }
     } catch (e) {
 
-
+        console.log(e);
         return res.status(200).json({
             message: "Some Issues With Getting Required CSA. Please try again.."
         })
@@ -304,7 +304,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                   queueNumber: queueNumber,
                   jid: listOfAgents[0].jid,
-                  queueStatus : "successful"
+                  queueStatus : "ready"
               });
           }
 
@@ -373,7 +373,7 @@ router.post('/checkQueueStatus', async(req, res) => {
               return res.send({
                 queueNumber : selectedClient.Qno,
                 jid : agentList[0].jid,
-                queueStatus : "successful"
+                queueStatus : "ready"
               })
             }
         }
@@ -410,6 +410,7 @@ router.post('/endChatInstance', async(req, res) => {
     let clientEmail = req.body.clientEmail;
     let queueDropped = req.body.queueDropped;
     let ticketNumber = req.body.ticketNumber;
+    console.log("Main ticket is at " + ticketNumber);
 
     try {
       if (queueDropped)
@@ -434,11 +435,16 @@ router.post('/endChatInstance', async(req, res) => {
       }
       if (!resultOk) {throw "Failed"}
       console.log("ended convo is: ..... ");
-      return res.send({
+      console.log("ended convo is: ..... ");
+      console.log("ended convo is: ..... ");
+      console.log("WAH FUCK ME");
+
+        return res.send({
           status: "Success"
       });
     }
     catch (e) {
+        console.log("WHY NOT ENDING ME");
       return res.status(400).json({
           message: "Failed to end Chat properly.."
       })}

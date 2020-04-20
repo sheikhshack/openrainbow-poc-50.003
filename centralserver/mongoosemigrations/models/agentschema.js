@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const agentSchema = mongoose.Schema({
     _id: { type: String, required: true },
-    jid: { type: String, required: true },
+    jid: { type: String, required: true, validate: /@sandbox-all-in-one-rbx-prod-1.rainbow.sbg/ },
     Department_id: { type: String, required: true },
     name: { type: String },
     availability: { type: Boolean },
