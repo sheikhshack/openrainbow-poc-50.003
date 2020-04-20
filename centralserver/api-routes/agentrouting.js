@@ -271,7 +271,7 @@ router.post('/checkQueueStatus', async(req, res) => {
       console.log("The department is now currently serving :", currentlyServing);
 
       // handle alreadyServed requests
-      if (currentlyServing - queueNumber >= 1 ) {alreadyServed = true;}
+      if (currentlyServing - queueNumber >= 2 ) {alreadyServed = true;}
 
       if (alreadyServed) {
         res.send("You have already been served.")
@@ -427,6 +427,7 @@ router.post('/checkQueueStatus', async(req, res) => {
       }
     } catch (e)
     {
+      console.log(e);
         return res.status(400).json({
             message: "Unable to check current Queue Status. Please check your connection.."
 
