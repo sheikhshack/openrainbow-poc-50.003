@@ -69,7 +69,7 @@ const boxes = ({ translateMessage }) => [{
     variant: 'DocumentSearch',
     title: "Our API Docs",
     subtitle: 'Powered by Express, we handcrafted our own APIs. See more ...',
-    href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-05-actions.html',
+    href: 'https://documenter.getpostman.com/view/10629994/Szf54UrQ?version=latest#1f343c20-753d-4d1d-bb13-8482fc434b8b',
 }, {
     variant: 'FlagInCog',
     title: 'Control Agent Abilities',
@@ -84,7 +84,7 @@ const boxes = ({ translateMessage }) => [{
     variant: 'Astronaut',
     title: 'Dialogflow Bots',
     subtitle: "Control your BOT policy here. We offer fine-grain controls. Fully Rainbow Integrated",
-    href: 'https://softwarebrothers.github.io/admin-bro-dev/tutorial-08-rbac.html',
+    href: 'admin/resources/AdminPolicy',
 }]
 
 const Card = styled(Box)`

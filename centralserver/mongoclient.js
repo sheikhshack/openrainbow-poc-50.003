@@ -301,7 +301,7 @@ async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, com
       "ClientEmail": clientEmail,
       "AgentJID": jidOfAgent,
       "TimeOfLog": new Date(),
-      "TypeOfCommunication": communication,
+      "TypeOfCommunication": JSON.stringify(conversation),
       "ChatHistory": conversation,
       "UpdatedAt": new Date(Date.now()) })
 }

@@ -6,6 +6,7 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
+// const helmet = require('helmet');
 
 const fs = require('fs');
 const mongoose = require('mongoose');
@@ -31,7 +32,9 @@ app.use('/admin', require('./admin'));
 app.use('/routing', agentRoutingRoutesAPI);
 app.use('/superadmin', superadminAPI);
 app.use('/extras', extrasAPI);
-
+// app.use(helmet.xssFilter());
+// app.use(helmet.noSniff());
+// app.use(helmet.hidePoweredBy())
 
 // redirecting index page to new polished admin page
 app.get('/', function (req,res) {
@@ -63,7 +66,7 @@ app.use((error, req, res, next) =>{
 mongoose.connect("mongodb+srv://tinkit:Happymon10!@sutdproject-gymhx.gcp.mongodb.net/sutdproject?authSource=admin&replicaSet=sutdproject-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true", { useNewUrlParser: true })
     .then(() => {
         console.log('🔥Mongoose Connected...');
-        //
+
         // //uncomment for heroku
         // let port = process.env.PORT || 8080;
         // app.listen(port, () => {

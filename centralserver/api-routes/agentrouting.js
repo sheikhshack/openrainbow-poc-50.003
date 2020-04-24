@@ -270,14 +270,13 @@ router.post('/checkQueueStatus', async(req, res) => {
       let currentlyServing = await swaggyDatabase.getDepartmentCurrentQueueNumber(department);
       console.log("The department is now currently serving :", currentlyServing);
 
-      // handle alreadyServed requests
-      if (currentlyServing - queueNumber >= 2 ) {alreadyServed = true;}
+      // // handle alreadyServed requests
+      // if (currentlyServing - queueNumber >= 2 ) {alreadyServed = true;}
+      //
+      // if (alreadyServed) {
+      //   res.send("You have already been served.")
+      // }
 
-      if (alreadyServed) {
-        res.send("You have already been served.")
-      }
-
-      else {
         console.log("asdlfjkhbasduyfgaisduyfidsa")
         let myturn = queueNumber < currentlyServing;
         let handlingDropQ = false;
@@ -339,7 +338,7 @@ router.post('/checkQueueStatus', async(req, res) => {
                 return res.send({
                     queueNumber: queueNumber,
                     jid: listOfAgents[0].jid,
-                    queueStatus : "successful"
+                    queueStatus : "ready"
                 });
             }
 
@@ -408,7 +407,7 @@ router.post('/checkQueueStatus', async(req, res) => {
                 return res.send({
                   queueNumber : selectedClient.Qno,
                   jid : agentList[0].jid,
-                  queueStatus : "successful"
+                  queueStatus : "ready"
                 })
               }
           }
@@ -424,7 +423,6 @@ router.post('/checkQueueStatus', async(req, res) => {
               queueStatus : "enqueued"
           })
         }
-      }
     } catch (e)
     {
       console.log(e);
@@ -476,7 +474,7 @@ router.post('/endChatInstance', async(req, res) => {
       });
     }
     catch (e) {
-      return res.status(400).json({
+      return res.status(200).json({
           message: "Failed to end Chat properly.."
       })}
 });
