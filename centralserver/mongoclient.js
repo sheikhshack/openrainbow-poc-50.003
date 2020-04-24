@@ -61,8 +61,6 @@ async function checkRequestedAgents(departmentID, communication) {
                       'Department_id' : departmentID,
                       'typeOfComm' : communication
                   }).sort({ servicedToday: 1}).toArray();
-                  //console.log("This is the requested Agents")
-                //console.log(result)
                   return result;
              }
 
@@ -137,7 +135,6 @@ async function incrementAgentSession(jid) {
       if (JSONObj.currentActiveSessions < JSONObj.reserve ) {
           // increment by currentActiveSessions by 1
           let newActiveSession = JSONObj.currentActiveSessions +=1;
-          console.log(newActiveSession);
 
 
           await client.db(dbName).collection('Agent').updateOne(
@@ -188,7 +185,6 @@ async function toggleAvail(jid) {
                 '_id' : 1
             }
         });
-    //console.log(JSONObj.getTimeStamp())
     if (JSONObj == null) {
         console.log("Wrong JID input");
         return
@@ -301,7 +297,7 @@ async function populateDataBaseWithLogs(department, jidOfAgent, clientEmail, com
       "ClientEmail": clientEmail,
       "AgentJID": jidOfAgent,
       "TimeOfLog": new Date(),
-      "TypeOfCommunication": JSON.stringify(conversation),
+      "TypeOfCommunication": communication,
       "ChatHistory": conversation,
       "UpdatedAt": new Date(Date.now()) })
 }
@@ -323,8 +319,6 @@ async function getDepartmentCurrentQueueNumber(departmentID){
     let result = await client.db(dbName).collection('Department').findOne({
         '_id' : departmentID
     });
-    console.log(result);
-    console.log(result.currentQueueNumber);
 
     return result.currentQueueNumber;
 }
@@ -352,11 +346,6 @@ async function getAndSetDepartmentLatestActiveRequestNumber(departmentID){
         {'_id': departmentID },
         {$inc: {'totalActiveRequests' : 1}
         });
-    //console.log(result);
-    // if (result.value == null){
-    //     return null;
-    // }
-
     return result.value.totalActiveRequests;
 }
 
@@ -428,12 +417,6 @@ async function addToWaitQ(name, department, communication, problem, queueNumber,
       "Qno": queueNumber,
       "queueDropped" : queueDropped
     }
-  //
-  // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
-  //   {"Department" : department},
-  //   {projection: {'Queue' : 1}})
-  // let currentQ = JSONObj.Queue;
-  // currentQ.push(thisRequest);
   await client.db(dbName).collection('Queues').updateOne(
     {"Department" : department},
     {$push: {"Queue" : thisRequest}})
@@ -464,8 +447,6 @@ async function getCurrentQ(department, queueType)
     let JSONObj = await client.db(dbName).collection('Queues').findOne(
       {"Department" : department},
       {$projection: {"DropQEventHandler" : 1}})
-
-    console.log("this is the Jasjkfgaisduyfgasduf ", JSONObj)
     return JSONObj.DropQEventHandler;
   }
 }
@@ -489,9 +470,7 @@ This method pops client at any index of the Main Queue
 async function updateWaitQ(department, index)
 {
   let currentQ = await getCurrentQ(department, "Main Queue");
-  console.log("CurrentQ is " , currentQ);
   currentQ.splice(index,1);
-  console.log("updated currentQ is " , currentQ);
   await client.db(dbName).collection('Queues').findOneAndUpdate(
     {"Department" : department},
     {$set: {"Queue" : currentQ}})
@@ -545,8 +524,6 @@ async function clientPicker(department)
   let OtherQ = await getCurrentQ(department, "OtherQ");
   let ChatQ = await getCurrentQ(department, "ChatQ");
   let selectedClient;
-  console.log("This is the current ChatQ served. ",ChatQServed)
-
 
   if (ChatQServed % 3 == 0 && ChatQServed != 0) {
     if (OtherQ.length == 0) {
@@ -582,7 +559,6 @@ async function getQueueNumber(department, queueNumber)
   for (var i = 0; i < currentQ.length; i++) {
     if (queueNumber == currentQ[i].Qno) {
       clientQno = currentQ.indexOf(currentQ[i]);
-      console.log("Inside getQueueNumber Function and this is the Qno ", clientQno);
     }
     else {
       console.log("Client is not in the wait Queue!");
@@ -600,7 +576,6 @@ async function getQueueNumber(department, queueNumber)
 
 async function retrieveBotPolicy(){
     let policy = await client.db(dbName).collection(('AdminPolicy')).findOne();
-    console.log(policy);
     return policy;
 }
 
@@ -676,43 +651,6 @@ async function incrementFailedRequests(department)
 }
 
 
-// async function testing(department, Qno)
-// {
-//   console.log(department)
-//   console.log(Qno)
-//   let selectedClient = await client.db(dbName).collection('TestCollection').findOne(
-//   {'Queue' : {$elemMatch : {Qno : Qno}}})
-//
-//
-//
-//   console.log(selectedClient)
-//
-//   return selectedClient.Qno;
-// }
-//
-//
-// async function sampleAddtoWaitQ(name, department, communication, problem, queueNumber, queueDropped)
-// {
-//   let thisRequest = {
-//       "Department": department,
-//       "Client": name,
-//       "Communication": communication,
-//       "Problem": problem,
-//       "Qno": queueNumber,
-//       "queueDropped" : queueDropped
-//     }
-//   //
-//   // let JSONObj =  await client.db(dbName).collection('Queues').findOne(
-//   //   {"Department" : department},
-//   //   {projection: {'Queue' : 1}})
-//   // let currentQ = JSONObj.Queue;
-//   // currentQ.push(thisRequest);
-//   await client.db(dbName).collection('TestCollection').updateOne(
-//     {"Department" : department},
-//     {$push: {"Queue" : thisRequest}})
-// }
-
-
 /**
  -----------------------------------------------------------------------------
  ---------------------- FailedRequests Collection ---------------------------
@@ -768,6 +706,10 @@ async function reset(){
             }})
 }
 
+async function cleanLog(){
+  await client.db(dbName).collection('Logging').deleteMany({});
+
+}
 
 
 
@@ -805,7 +747,6 @@ module.exports = {
     getAndSetTicketNumber: getAndSetTicketNumber,
     logFailedRequest : logFailedRequest,
     getQueueNumber :  getQueueNumber,
-    reset : reset
-    // testing :testing,
-    // sampleAddtoWaitQ: sampleAddtoWaitQ
+    reset : reset,
+    cleanLog : cleanLog
 };
