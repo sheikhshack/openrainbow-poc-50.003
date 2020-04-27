@@ -11,6 +11,9 @@ const loggingSchema = mongoose.Schema({
     UpdatedAt: { type: Date, default: Date.now() },
     ChatHistory: {type: String},
 
+
+
+
 }, {collection: 'Logging'});
 
 // Update the updated_at field on save

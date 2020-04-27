@@ -1,0 +1,167 @@
+{
+	"info": {
+		"_postman_id": "af5fc6d4-8e53-44f0-b0c5-c4ebef77428c",
+		"name": "Test 1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Required CSA (Positive)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9c18ac14-8e35-4939-984c-72273142b3bc",
+						"exec": [
+							"// Testing for positive connection",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 150ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1500);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"",
+							"// Testing for schema compliance",
+							"var schema = {",
+							"    \"$schema\": \"http://json-schema.org/draft-07/schema\",",
+							"    \"$id\": \"http://example.com/example.json\",",
+							"    \"type\": \"object\",",
+							"    \"readOnly\": false,",
+							"    \"writeOnly\": false,",
+							"    \"minProperties\": 0,",
+							"    \"title\": \"The Root Schema\",",
+							"    \"description\": \"The root schema comprises the entire JSON document.\",",
+							"    \"additionalProperties\": true,",
+							"    \"required\": [",
+							"        \"queueNumber\",",
+							"        \"jid\",",
+							"        \"queueStatus\",",
+							"        \"position\"",
+							"    ],",
+							"    \"properties\": {",
+							"        \"queueNumber\": {",
+							"            \"$id\": \"#/properties/queueNumber\",",
+							"            \"type\": \"integer\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Queuenumber Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": 0,",
+							"            \"examples\": [",
+							"                0",
+							"            ]",
+							"        },",
+							"        \"jid\": {",
+							"            \"$id\": \"#/properties/jid\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Jid Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": null,",
+							"            \"examples\": [",
+							"                null",
+							"            ]",
+							"        },",
+							"        \"position\": {",
+							"            \"$id\": \"#/properties/position\",",
+							"            \"type\": \"integer\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The position Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": 0,",
+							"            \"examples\": [",
+							"                0",
+							"            ]",
+							"        },",
+							"        \"queueStatus\": {",
+							"            \"$id\": \"#/properties/queueStatus\",",
+							"            \"type\": \"string\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"minLength\": 0,",
+							"            \"title\": \"The Queuestatus Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": \"\",",
+							"            \"examples\": [",
+							"                \"enqueued\", \"ready\"",
+							"            ]",
+							"        }",
+							"    }",
+							"};",
+							"",
+							"var csaResult = JSON.parse(responseBody)",
+							"",
+							"pm.test('Schema and Formatting of result is valid', function() {",
+							"  pm.expect(tv4.validate(csaResult, schema)).to.be.true;",
+							"});",
+							"",
+							"",
+							"// valid jid is returned ",
+							"pm.test(\"Validity of ID provided\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.jid !== null)",
+							"    {",
+							"        pm.expect(jsonData.jid).to.include(\"@sandbox-all-in-one-rbx-prod-1.rainbow.sbg\");",
+							"        pm.expect(jsonData.queueStatus).to.include(\"ready\");",
+							"        console.log(\"Case reflectes status for ready\");",
+							"    }",
+							"    else{",
+							"        ",
+							"        pm.expect(jsonData.jid).to.eql(null);",
+							"        pm.expect(jsonData.queueStatus).to.include(\"enqueued\");",
+							"        console.log(\"Case reflectes status for queueing\");",
+							"    }",
+							"    ",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n\t\"name\":\"{{name}}\",\n\t\"email\":\"{{email}}\",\n\t\"department\":\"{{department}}\",\n\t\"communication\":\"{{communication}}\",\n\t\"problem\":\"{{problem}}\",\n\t\"ticketNumber\": 4855,\n\t\"queueDropped\":\"{{queueDropped}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/routing/getRequiredCSA/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"routing",
+						"getRequiredCSA",
+						""
+					]
+				},
+				"description": "Positive Test cases that are legitimate"
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

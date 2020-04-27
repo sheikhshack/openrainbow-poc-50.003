@@ -1,0 +1,228 @@
+{
+	"info": {
+		"_postman_id": "af5fc6d4-8e53-44f0-b0c5-c4ebef77428c",
+		"name": "Test 1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Required CSA (Positive)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9c18ac14-8e35-4939-984c-72273142b3bc",
+						"exec": [
+							"// Testing for positive connection",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 150ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1500);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"",
+							"// Testing for schema compliance",
+							"var schema = {",
+							"    \"$schema\": \"http://json-schema.org/draft-07/schema\",",
+							"    \"$id\": \"http://example.com/example.json\",",
+							"    \"type\": \"object\",",
+							"    \"readOnly\": false,",
+							"    \"writeOnly\": false,",
+							"    \"minProperties\": 0,",
+							"    \"title\": \"The Root Schema\",",
+							"    \"description\": \"The root schema comprises the entire JSON document.\",",
+							"    \"additionalProperties\": true,",
+							"    \"required\": [",
+							"        \"queueNumber\",",
+							"        \"jid\",",
+							"        \"queueStatus\"",
+							"    ],",
+							"    \"properties\": {",
+							"        \"queueNumber\": {",
+							"            \"$id\": \"#/properties/queueNumber\",",
+							"            \"type\": \"integer\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Queuenumber Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": 0,",
+							"            \"examples\": [",
+							"                0",
+							"            ]",
+							"        },",
+							"        \"jid\": {",
+							"            \"$id\": \"#/properties/jid\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Jid Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": null,",
+							"            \"examples\": [",
+							"                null",
+							"            ]",
+							"        },",
+							"        \"queueStatus\": {",
+							"            \"$id\": \"#/properties/queueStatus\",",
+							"            \"type\": \"string\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"minLength\": 0,",
+							"            \"title\": \"The Queuestatus Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": \"\",",
+							"            \"examples\": [",
+							"                \"enqueued\", \"ready\"",
+							"            ]",
+							"        }",
+							"    }",
+							"};",
+							"",
+							"var csaResult = JSON.parse(responseBody)",
+							"",
+							"pm.test('Schema and Formatting of result is valid', function() {",
+							"  pm.expect(tv4.validate(csaResult, schema)).to.be.true;",
+							"});",
+							"",
+							"",
+							"// valid jid is returned ",
+							"pm.test(\"Validity of ID provided\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.jid !== null)",
+							"    {",
+							"        pm.expect(jsonData.jid).to.include(\"@sandbox-all-in-one-rbx-prod-1.rainbow.sbg\");",
+							"        pm.expect(jsonData.queueStatus).to.include(\"ready\");",
+							"        console.log(\"Case reflectes status for ready\");",
+							"    }",
+							"    else{",
+							"        ",
+							"        pm.expect(jsonData.jid).to.eql(null);",
+							"        pm.expect(jsonData.queueStatus).to.include(\"enqueued\");",
+							"        console.log(\"Case reflectes status for queueing\");",
+							"    }",
+							"    ",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"name\":\"Shhe\",\n\"email\":\"rfrrf\",\n\"department\":\"{{department}}\",\n\"communication\":\"{{communication}}\",\n\"problem\":\"rh3ygbr\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/routing/getRequiredCSA/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"routing",
+						"getRequiredCSA",
+						""
+					]
+				},
+				"description": "Positive Test cases that are legitimate"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Dynamic Guest",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8c4ef7b2-bc20-482e-8856-07f7833ddb6a",
+						"exec": [
+							"// Testing for positive connection",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"",
+							"pm.test(\"Response time is less than 300ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+							"});",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"// Testing for contents of ID and Pass to be valid",
+							"pm.test(\"Validity of ID provided\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.guestID).to.include(\".sandbox.openrainbow.com\");",
+							"});",
+							"",
+							"pm.test(\"Correct Password regex\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.guestPass.length).to.equal(40);",
+							"});",
+							"",
+							"",
+							"",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "4059f06e-cbd8-46ca-b23a-85710e8c2f1d",
+						"exec": [
+							"console.log(\"Currently Testing: \" + data.name);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/routing/createguestdynamic?name={{name}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"routing",
+						"createguestdynamic"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "{{name}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

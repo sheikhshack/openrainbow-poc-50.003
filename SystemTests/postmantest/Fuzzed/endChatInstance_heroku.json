@@ -1,0 +1,69 @@
+{
+	"info": {
+		"_postman_id": "0fed45c7-1268-449f-b54b-bc8c492b36e6",
+		"name": "Test 3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "End chat instance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "66e1676f-ee41-4fa6-ace4-d1c9bed97499",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 1500ms (account for HEROKU\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1500);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"// check if successful",
+							"pm.test(\"Validity of Queue is true\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eq(\"Success\");",
+							"    ",
+							"    ",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n\"clientEmail\" : \"{{clientEmail}}\",\n\"department\":\"{{department}}\",\n\"communication\":\"{{communication}}\",\n\"queueNumber\":\"{{queueNumber}}\",\n\"jid\" : \"{{jid}}\",\n\"convoID\" : \"{{convoID}}\",\n\"queueDropped\" : \"{{queueDropped}}\",\n\"convoHistory\" : \"{{convoHistory}}\",\n \"ticketNumber\" : 4855\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/routing/endChatInstance",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"routing",
+						"endChatInstance"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

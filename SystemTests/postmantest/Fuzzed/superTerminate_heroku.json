@@ -1,0 +1,73 @@
+{
+	"info": {
+		"_postman_id": "f1eeb4a2-2b29-40c8-b4e6-02602145d18a",
+		"name": "Test 5",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Super Admin Terminate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8ee8a97e-9292-4203-aa11-421641576a06",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is bad request 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 300ms (account for HEROKU\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"// check if successful",
+							"pm.test(\"Validity of Terminate is true\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eq(\"Success\");",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"nonexistent@swaggy.com\",\n    \"password\": \"@NonExistent47\",\n    \"firstName\": \"Non\",\n    \"lastName\": \"Existent\"\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/superadmin/terminateUserOnRainbow/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"superadmin",
+						"terminateUserOnRainbow",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

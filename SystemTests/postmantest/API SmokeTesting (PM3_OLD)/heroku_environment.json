@@ -1,0 +1,14 @@
+{
+	"id": "605f390f-4cba-4152-b3a8-e5ccf65b1218",
+	"name": "Heroku Server",
+	"values": [
+		{
+			"key": "url",
+			"value": "https://poc-open-rainbow-swaggy.herokuapp.com",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2020-04-09T06:01:26.659Z",
+	"_postman_exported_using": "Postman/7.21.1"
+}

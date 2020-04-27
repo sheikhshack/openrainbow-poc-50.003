@@ -1,0 +1,78 @@
+{
+	"info": {
+		"_postman_id": "ee9718fd-f108-47db-8651-c47baf3ecda3",
+		"name": "Test 4",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Super Admin Create New",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8a07bc4d-6bcf-4fa0-a51a-c3ffb08359ab",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Status code is bad request 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Status code is 503 Server Unavailable\", function () {",
+							"    pm.response.to.have.status(503);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 300ms (account for HEROKU\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"// check if successful",
+							"pm.test(\"Validity of Create New is true\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eq(\"Success\");",
+							"    ",
+							"    ",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"firstName\": \"{{firstName}}\",\n    \"lastName\": \"{{lastName}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/superadmin/registerUserOnRainbow/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"superadmin",
+						"registerUserOnRainbow",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

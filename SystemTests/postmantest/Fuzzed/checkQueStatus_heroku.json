@@ -1,0 +1,144 @@
+{
+	"info": {
+		"_postman_id": "2e825d38-1a27-400e-98c4-7024059489fb",
+		"name": "Test 2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Check Queue Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "298ee7ee-483f-464f-9350-7a4c16188c0f",
+						"exec": [
+							"// Testing for positive connection",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Testing for proper timing specs",
+							"pm.test(\"Response time is less than 1500ms (accounting for HEROKU)\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(1500);",
+							"});",
+							"",
+							"// Check payload exists",
+							"pm.test(\"Content-Type and payload is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"",
+							"var schema = {",
+							"    \"$schema\": \"http://json-schema.org/draft-07/schema\",",
+							"    \"$id\": \"http://example.com/example.json\",",
+							"    \"type\": \"object\",",
+							"    \"readOnly\": false,",
+							"    \"writeOnly\": false,",
+							"    \"minProperties\": 0,",
+							"    \"title\": \"The Root Schema\",",
+							"    \"description\": \"The root schema comprises the entire JSON document.\",",
+							"    \"additionalProperties\": true,",
+							"    \"required\": [",
+							"        \"queueNumber\",",
+							"        \"jid\",",
+							"        \"position\"",
+							"    ],",
+							"    \"properties\": {",
+							"        \"queueNumber\": {",
+							"            \"$id\": \"#/properties/queueNumber\",",
+							"            \"type\": \"string\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"minLength\": 0,",
+							"            \"title\": \"The Queuenumber Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": \"\",",
+							"            \"examples\": [",
+							"                \"1\"",
+							"            ]",
+							"        },",
+							"        \"jid\": {",
+							"            \"$id\": \"#/properties/jid\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Jid Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": null,",
+							"            \"examples\": [",
+							"                null",
+							"            ]",
+							"        },",
+							"        \"position\": {",
+							"            \"$id\": \"#/properties/position\",",
+							"            \"type\": \"integer\",",
+							"            \"readOnly\": false,",
+							"            \"writeOnly\": false,",
+							"            \"title\": \"The Position Schema\",",
+							"            \"description\": \"An explanation about the purpose of this instance.\",",
+							"            \"default\": 0,",
+							"            \"examples\": [",
+							"                1",
+							"            ]",
+							"        }",
+							"    }",
+							"};",
+							"",
+							"var queueResult = JSON.parse(responseBody)",
+							"",
+							"pm.test('Schema and Formatting of queueu result is valid', function() {",
+							"  pm.expect(tv4.validate(queueResult, schema)).to.be.true;",
+							"});",
+							"",
+							"// valid jid is returned ",
+							"pm.test(\"Validity of Queue is true\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.queueNumber).to.be.a(\"string\");",
+							"    if (jsonData.jid !== null)",
+							"    {",
+							"        pm.expect(jsonData.jid).to.include(\"@sandbox-all-in-one-rbx-prod-1.rainbow.sbg\");",
+							"        pm.expect(jsonData.position).to.eq(null);",
+							"        console.log(\"Case relecting currently ready\");",
+							"    }",
+							"    else{",
+							"        ",
+							"        pm.expect(jsonData.jid).to.eql(null);",
+							"        pm.expect(jsonData.position).to.be.a(\"number\");",
+							"        console.log(\"Case relecting onqueue\")",
+							"    }",
+							"    ",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n\"department\":\"{{department}}\",\n\"communication\":\"{{communication}}\",\n\"queueNumber\":\"{{queueNumber}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/routing/checkQueueStatus",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"routing",
+						"checkQueueStatus"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

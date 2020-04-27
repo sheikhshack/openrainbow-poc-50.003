@@ -69,7 +69,7 @@ const boxes = ({ translateMessage }) => [{
     variant: 'DocumentSearch',
     title: "Our API Docs",
     subtitle: 'Powered by Express, we handcrafted our own APIs. See more ...',
-    href: 'https://documenter.getpostman.com/view/10629994/Szf54UrQ?version=latest#1f343c20-753d-4d1d-bb13-8482fc434b8b',
+    href: 'https://documenter.getpostman.com/view/10629994/Szf54UrQ?version=latest#1bdd109b-ca0f-40cc-874c-ccd6a2',
 }, {
     variant: 'FlagInCog',
     title: 'Control Agent Abilities',
@@ -189,7 +189,7 @@ const Dashboard =  (props) => {
 
 
 <Box width={[1, 1, 1 / 2]} p="lg">
-    <Card as="a" flex href="https://google.com">
+    <Card as="a" flex href="https://github.com/oliviergoals/full_website">
         <Box flexShrink={0}><Image src="https://i.imgur.com/QgRDTqG.png?1" /></Box>
         <Box ml="xl">
         <H4>Checkout our Client App </H4>
@@ -198,7 +198,7 @@ const Dashboard =  (props) => {
     </Card>
     </Box>
     <Box width={[1, 1, 1 / 2]} p="lg">
-    <Card as="a" flex href="https://github.com/SoftwareBrothers/admin-bro/issues">
+    <Card as="a" flex href="https://github.com/sheikhshack/openrainbow-poc-50.003">
         <Box flexShrink={0}><Illustration variant="GithubLogo" /></Box>
         <Box ml="xl">
         <H4>Visit Our Swaggy Github!</H4>
